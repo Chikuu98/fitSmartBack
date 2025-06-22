@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   OneToOne,
 } from 'typeorm';
+import { Exclude } from 'class-transformer';
 import { MemberDetails } from './members/member_details.entity';
 import { MentorDetails } from './mentors/mentor_details.entity';
 
@@ -32,6 +33,7 @@ export class User {
   @Column({ length: 100, unique: true })
   email: string;
 
+  @Exclude()
   @Column({ length: 255 })
   password: string;
 

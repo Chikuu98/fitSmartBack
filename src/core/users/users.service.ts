@@ -4,9 +4,10 @@ import { DataSource, Repository } from 'typeorm';
 import { User, UserRole } from './user.entity';
 import * as bcrypt from 'bcrypt';
 import { CreateMemberDto } from './dto/create-member.dto';
-import { MemberDetails } from './members/member_details.entity';
 import { CreateMentorDto } from './dto/create-mentor.dto';
 import { MentorDetails } from './mentors/mentor_details.entity';
+import { MemberDetails } from './members/member_details.entity';
+import { instanceToPlain } from 'class-transformer';
 
 @Injectable()
 export class UsersService {
@@ -30,7 +31,6 @@ export class UsersService {
 
     const savedUser = await this.userRepo.save(user);
 
-    // Create MemberDetails
     const memberDetails = this.dataSource.getRepository(MemberDetails).create({
       user: savedUser,
       age: dto.age,
@@ -46,7 +46,7 @@ export class UsersService {
     return savedUser;
   }
 
-    async createMentor(dto: CreateMentorDto): Promise<User> {
+  async createMentor(dto: CreateMentorDto): Promise<User> {
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(dto.password, salt);
 
@@ -60,7 +60,6 @@ export class UsersService {
 
     const savedUser = await this.userRepo.save(user);
 
-    // Create MentorDetails
     const mentorDetails = this.dataSource.getRepository(MentorDetails).create({
       user: savedUser,
       expertise: dto.expertise,
@@ -75,23 +74,46 @@ export class UsersService {
     return savedUser;
   }
 
-  async findAll(): Promise<User[]> {
-    return this.userRepo.find();
+  async findAll(): Promise<any[]> {
+    const users = await this.userRepo.find();
+    return users.map(user => instanceToPlain(user));
   }
 
-  async findOne(id: number): Promise<User> {
+  async findOne(id: number): Promise<any> {
     const user = await this.userRepo.findOneBy({ id });
     if (!user) {
       throw new NotFoundException(`User not found`);
     }
-    return user;
+    return instanceToPlain(user);
   }
 
-  async findByEmail(email: string): Promise<User> {
+  async findByEmail(email: string): Promise<any> {
     const user = await this.userRepo.findOne({ where: { email } });
     if (!user) {
       throw new NotFoundException(`User not found`);
     }
-    return user;
+    return instanceToPlain(user);
+  }
+
+  async findMe(user: any): Promise<any> {
+    const userId = user.userId;
+    let relations: string[] = [];
+
+    if (user.role === 'member' || user.role === UserRole.MEMBER) {
+      relations = ['memberDetails'];
+    } else if (user.role === 'mentor' || user.role === UserRole.MENTOR) {
+      relations = ['mentorDetails'];
+    }
+
+    const userEntity = await this.userRepo.findOne({
+      where: { id: userId },
+      relations,
+    });
+
+    if (!userEntity) {
+      throw new NotFoundException(`User not found`);
+    }
+
+    return instanceToPlain(userEntity);
   }
 }
