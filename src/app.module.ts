@@ -6,6 +6,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { typeOrmConfig } from './config/typeorm.config';
 import { UsersModule } from './core/users/users.module';
 import { AuthModule } from './core/auth/auth.module';
+import { MentorSlotsModule } from './modules/mentorSlots/slots/mentor-slots.module';
 
 @Module({
   imports: [
@@ -16,7 +17,8 @@ import { AuthModule } from './core/auth/auth.module';
       useFactory: typeOrmConfig,
     }),
     UsersModule,
-    AuthModule
+    AuthModule,
+    MentorSlotsModule
   ],
   controllers: [AppController],
   providers: [AppService],
