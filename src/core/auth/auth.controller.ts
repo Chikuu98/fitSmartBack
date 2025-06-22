@@ -4,8 +4,9 @@ import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { ApiBody, ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
-import { CreateUserDto } from '../users/dto/create-user.dto';
 import { User } from '../users/user.entity';
+import { CreateMemberDto } from '../users/dto/create-member.dto';
+import { CreateMentorDto } from '../users/dto/create-mentor.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -15,11 +16,18 @@ export class AuthController {
     private usersService: UsersService,
   ) {}
 
-  @Post('register')
-  @ApiCreatedResponse({ description: 'User registered successfully.' })
-  @ApiBody({ type: CreateUserDto })
-  create(@Body() createUserDto: CreateUserDto): Promise<User> {
-    return this.usersService.create(createUserDto);
+  @Post('register/member')
+  @ApiCreatedResponse({ description: 'Member registered successfully.' })
+  @ApiBody({ type: CreateMemberDto })
+  createMember(@Body() createMemberDto: CreateMemberDto): Promise<User> {
+    return this.usersService.createMember(createMemberDto);
+  }
+
+  @Post('register/mentor')
+  @ApiCreatedResponse({ description: 'Mentor registered successfully.' })
+  @ApiBody({ type: CreateMentorDto })
+  createMentor(@Body() createMentorDto: CreateMentorDto): Promise<User> {
+    return this.usersService.createMentor(createMentorDto);
   }
 
   @Post('login')
