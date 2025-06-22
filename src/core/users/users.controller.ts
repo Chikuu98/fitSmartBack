@@ -1,20 +1,15 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { User } from './user.entity';
-import { ApiTags, ApiCreatedResponse, ApiBody } from '@nestjs/swagger';
-import { CreateUserDto } from './dto/create-user.dto';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
 
-@ApiTags('users')
+@ApiTags('Users')
+@UseGuards(AuthGuard('jwt'))
+@ApiBearerAuth()
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
-
-  @Post()
-  @ApiCreatedResponse({ description: 'User successfully created.' })
-  @ApiBody({ type: CreateUserDto })
-  create(@Body() createUserDto: CreateUserDto): Promise<User> {
-    return this.usersService.create(createUserDto);
-  }
 
   @Get()
   findAll(): Promise<User[]> {
