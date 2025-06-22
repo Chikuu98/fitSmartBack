@@ -4,7 +4,10 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToOne,
 } from 'typeorm';
+import { MemberDetails } from './members/member_details.entity';
+import { MentorDetails } from './mentors/mentor_details.entity';
 
 export enum Gender {
   MALE = 'male',
@@ -12,10 +15,10 @@ export enum Gender {
   OTHER = 'other',
 }
 
-export enum FitnessLevel {
-  BEGINNER = 'beginner',
-  INTERMEDIATE = 'intermediate',
-  ADVANCED = 'advanced',
+export enum UserRole {
+  MEMBER = 'member',
+  MENTOR = 'mentor',
+  ADMIN = 'admin',
 }
 
 @Entity('users')
@@ -32,30 +35,21 @@ export class User {
   @Column({ length: 255 })
   password: string;
 
+  @Column({ type: 'enum', enum: UserRole, default: UserRole.MEMBER })
+  role: UserRole;
+
   @Column({ type: 'enum', enum: Gender })
   gender: Gender;
-
-  @Column()
-  age: number;
-
-  @Column('decimal', { precision: 5, scale: 2 })
-  height: number;
-
-  @Column('decimal', { precision: 5, scale: 2 })
-  weight: number;
-
-  @Column({ type: 'enum', enum: FitnessLevel })
-  fitness_level: FitnessLevel;
-
-  @Column({ length: 100 })
-  goal: string;
-
-  @Column({ length: 100 })
-  dietary_preference: string;
 
   @CreateDateColumn()
   created_at: Date;
 
   @UpdateDateColumn()
   updated_at: Date;
+
+  @OneToOne(() => MemberDetails, (details) => details.user, { cascade: true })
+  memberDetails: MemberDetails;
+
+  @OneToOne(() => MentorDetails, (details) => details.user, { cascade: true })
+  mentorDetails: MentorDetails;
 }

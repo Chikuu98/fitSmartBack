@@ -6,10 +6,11 @@ import {
   IsString,
   Length,
 } from 'class-validator';
-import { Gender, FitnessLevel } from '../user.entity';
+import { Gender } from '../user.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { FitnessLevel } from '../members/member_details.entity';
 
-export class CreateUserDto {
+export class CreateMemberDto {
   @IsString()
   @Length(1, 100)
   @ApiProperty({ example: 'Chiran Jeewantha' })
