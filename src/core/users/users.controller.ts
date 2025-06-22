@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, UseGuards, Req } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { User, UserRole } from './user.entity';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -17,6 +17,11 @@ export class UsersController {
   @Roles(UserRole.ADMIN)
   findAll(): Promise<User[]> {
     return this.usersService.findAll();
+  }
+
+  @Get('/me')
+  findMe(@Req() req): Promise<User> {
+    return this.usersService.findMe(req.user);
   }
 
   @Get(':id')
