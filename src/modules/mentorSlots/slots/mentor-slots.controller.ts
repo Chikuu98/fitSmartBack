@@ -12,10 +12,9 @@ import { MentorSlotsService } from './mentor-slots.service';
 import { CreateSlotDto } from './dto/create-slot.dto';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
-import { Roles } from 'src/common/decorators/roles.decorator';
-import { RolesGuard } from 'src/common/guards/roles.guard';
-import { User, UserRole } from 'src/core/users/user.entity';
-
+import { RolesGuard } from '@/common/guards/roles.guard';
+import { Roles } from '@/common/decorators/roles.decorator';
+import { UserRole } from '@/core/users/user.entity';
 @ApiTags('Mentor Slots')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -37,12 +36,6 @@ export class MentorSlotsController {
   @Get(':slotId')
   async getSlotById(@Param('slotId') slotId: number) {
     return this.mentorSlotService.getSlotById(slotId);
-  }
-
-  @Roles(UserRole.MENTOR)
-  @Post(':slotId/book')
-  async bookSlot(@Param('slotId') slotId: number) {
-    return this.mentorSlotService.bookSlot(slotId);
   }
 
   @Roles(UserRole.MENTOR)

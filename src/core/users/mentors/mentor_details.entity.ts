@@ -1,4 +1,3 @@
-
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -6,7 +5,7 @@ import {
   OneToOne,
   JoinColumn,
 } from 'typeorm';
-import { User } from '../user.entity';
+import { User } from '@/core/users/user.entity';
 
 @Entity('mentor_details')
 export class MentorDetails {

@@ -36,15 +36,6 @@ export class MentorSlotsService {
     return slot;
   }
 
-  async bookSlot(slotId: number): Promise<MentorTimeSlot> {
-    const slot = await this.getSlotById(slotId);
-    if (slot.is_booked) {
-      throw new Error('Slot already booked');
-    }
-    slot.is_booked = true;
-    return await this.timeSlotRepo.save(slot);
-  }
-
   async deleteSlot(id: number): Promise<void> {
     const result = await this.timeSlotRepo.delete(id);
     if (result.affected === 0) {
