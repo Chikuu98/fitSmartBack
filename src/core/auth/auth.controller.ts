@@ -18,14 +18,14 @@ export class AuthController {
   @Post('register/member')
   @ApiCreatedResponse({ description: 'Member registered successfully.' })
   @ApiBody({ type: CreateMemberDto })
-  createMember(@Body() createMemberDto: CreateMemberDto): Promise<User> {
+  createMember(@Body() createMemberDto: CreateMemberDto) {
     return this.usersService.createMember(createMemberDto);
   }
 
   @Post('register/mentor')
   @ApiCreatedResponse({ description: 'Mentor registered successfully.' })
   @ApiBody({ type: CreateMentorDto })
-  createMentor(@Body() createMentorDto: CreateMentorDto): Promise<User> {
+  createMentor(@Body() createMentorDto: CreateMentorDto) {
     return this.usersService.createMentor(createMentorDto);
   }
 
