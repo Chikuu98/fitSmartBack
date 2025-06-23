@@ -17,7 +17,7 @@ export class UsersService {
     private dataSource: DataSource,
   ) {}
 
-  async createMember(dto: CreateMemberDto): Promise<User> {
+  async createMember(dto: CreateMemberDto) {
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(dto.password, salt);
 
@@ -43,10 +43,13 @@ export class UsersService {
 
     await this.dataSource.getRepository(MemberDetails).save(memberDetails);
 
-    return savedUser;
+    return {
+      message: 'Member registered successfully',
+      success: true,
+    };
   }
 
-  async createMentor(dto: CreateMentorDto): Promise<User> {
+  async createMentor(dto: CreateMentorDto) {
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(dto.password, salt);
 
@@ -71,12 +74,15 @@ export class UsersService {
 
     await this.dataSource.getRepository(MentorDetails).save(mentorDetails);
 
-    return savedUser;
+    return {
+      message: 'Mentor registered successfully',
+      success: true,
+    };
   }
 
   async findAll(): Promise<any[]> {
     const users = await this.userRepo.find();
-    return users.map(user => instanceToPlain(user));
+    return users.map((user) => instanceToPlain(user));
   }
 
   async findOne(id: number): Promise<any> {

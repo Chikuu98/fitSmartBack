@@ -14,6 +14,11 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT') ?? 3000;
+  app.enableCors({
+    origin: configService.get<number>('FRONTEND_URL') ?? '*',
+    credentials: true,
+    methods: '*',
+  });
   await app.listen(port);
 }
 bootstrap();
