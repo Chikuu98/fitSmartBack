@@ -1,10 +1,11 @@
 import { Controller, Get, Param, UseGuards, Req } from '@nestjs/common';
-import { UsersService } from './users.service';
-import { User, UserRole } from './user.entity';
+
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from 'src/common/guards/roles.guard';
-import { Roles } from 'src/common/decorators/roles.decorator';
+import { RolesGuard } from '@/common/guards/roles.guard';
+import { Roles } from '@/common/decorators/roles.decorator';
+import { UsersService } from './users.service';
+import { User, UserRole } from './user.entity';
 
 @ApiTags('Users')
 @UseGuards(AuthGuard('jwt'), RolesGuard)

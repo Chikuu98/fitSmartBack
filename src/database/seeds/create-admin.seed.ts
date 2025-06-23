@@ -1,7 +1,6 @@
+import { AppDataSource } from '@/config/data-source';
+import { Gender, User, UserRole } from '@/core/users/user.entity';
 import * as bcrypt from 'bcrypt';
-import { AppDataSource } from '../../config/data-source';
-import { Gender, User, UserRole } from 'src/core/users/user.entity';
-
 
 async function seedAdmin() {
   await AppDataSource.initialize();

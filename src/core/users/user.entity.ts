@@ -7,8 +7,8 @@ import {
   OneToOne,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
-import { MemberDetails } from './members/member_details.entity';
-import { MentorDetails } from './mentors/mentor_details.entity';
+import { MemberDetails } from '@/core/users/members/member_details.entity';
+import { MentorDetails } from '@/core/users/mentors/mentor_details.entity';
 
 export enum Gender {
   MALE = 'male',

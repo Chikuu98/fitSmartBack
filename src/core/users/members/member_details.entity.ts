@@ -5,7 +5,7 @@ import {
   OneToOne,
   JoinColumn,
 } from 'typeorm';
-import { User } from '../user.entity';
+import { User } from '@/core/users/user.entity';
 
 export enum FitnessLevel {
   BEGINNER = 'beginner',
