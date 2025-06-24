@@ -31,6 +31,16 @@ export class CreateMentorDetailsTable1750588365727
             length: '255',
           },
           {
+            name: 'country',
+            type: 'varchar',
+            length: '100',
+          },
+          {
+            name: 'language',
+            type: 'varchar',
+            length: '100',
+          },
+          {
             name: 'certifications',
             type: 'varchar',
             length: '255',

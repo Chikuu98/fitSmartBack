@@ -22,6 +22,12 @@ export class MentorDetails {
   @Column({ length: 255 })
   bio: string;
 
+  @Column({ length: 100 })
+  country: string;
+
+  @Column({ length: 100 })
+  language: string;
+
   @Column({ length: 255, nullable: true })
   certifications: string;
 
