@@ -67,6 +67,8 @@ export class UsersService {
       user: savedUser,
       expertise: dto.expertise,
       bio: dto.bio,
+      country: dto.country,
+      language: dto.language,
       certifications: dto.certifications,
       social_links: dto.social_links,
       contact_number: dto.contact_number,
