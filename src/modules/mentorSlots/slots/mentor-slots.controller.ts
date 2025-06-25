@@ -15,6 +15,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { UserRole } from '@/core/users/user.entity';
+import { UpdateSlotDto } from './dto/update-slot.dto';
 @ApiTags('Mentor Slots')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -22,10 +23,22 @@ import { UserRole } from '@/core/users/user.entity';
 export class MentorSlotsController {
   constructor(private readonly mentorSlotService: MentorSlotsService) {}
 
+  @Roles(UserRole.MENTOR)
   @Post()
   async createSlot(@Body() dto: CreateSlotDto, @Req() req) {
     const mentorId = req.user.userId;
     return this.mentorSlotService.createSlot(dto, mentorId);
+  }
+
+  @Roles(UserRole.MENTOR)
+  @Post(':slotId')
+  async updateSlot(
+    @Param('slotId') slotId: number,
+    @Body() dto: UpdateSlotDto,
+    @Req() req: any,
+  ) {
+    const mentorId = req.user.userId;
+    return this.mentorSlotService.updateSlot(slotId, dto, mentorId);
   }
 
   @Get('mentor/:mentorId')
@@ -41,7 +54,6 @@ export class MentorSlotsController {
   @Roles(UserRole.MENTOR)
   @Delete(':slotId')
   async deleteSlot(@Param('slotId') slotId: number) {
-    await this.mentorSlotService.deleteSlot(slotId);
-    return { message: 'Slot deleted successfully' };
+    return this.mentorSlotService.deleteSlot(slotId);
   }
 }

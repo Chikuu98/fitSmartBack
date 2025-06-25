@@ -49,7 +49,6 @@ export class BookingController {
     return this.bookingService.updateBooking(id, updateDto);
   }
 
-  // Mentor accepts a booking & sets Google Meet link
   @Patch(':id/accept')
   @Roles(UserRole.MENTOR)
   async accept(
@@ -59,14 +58,12 @@ export class BookingController {
     return this.bookingService.acceptBooking(id, googleMeetLink);
   }
 
-  // Member cancels booking
   @Patch(':id/cancel')
   @Roles(UserRole.MEMBER)
   async cancel(@Param('id', ParseIntPipe) id: number) {
     return this.bookingService.cancelBooking(id);
   }
 
-  // Admin/mentor marks payment complete
   @Patch(':id/mark-paid')
   @Roles(UserRole.ADMIN, UserRole.MENTOR)
   async markAsPaid(@Param('id', ParseIntPipe) id: number) {

@@ -22,8 +22,7 @@ export class BookingService {
     private readonly userRepo: Repository<User>,
   ) {}
 
-  // Create new booking
-  async createBooking(dto: CreateBookingDto, userId: number): Promise<Booking> {
+  async createBooking(dto: CreateBookingDto, userId: number) {
     const slot = await this.slotRepo.findOne({
       where: { id: dto.mentor_slot_id },
       relations: ['mentor'],
@@ -46,55 +45,81 @@ export class BookingService {
     slot.is_booked = true;
     await this.slotRepo.save(slot);
 
-    return await this.bookingRepo.save(booking);
+    await this.bookingRepo.save(booking);
+    return {
+      success: true,
+      message: 'Booking created successfully',
+    };
   }
 
-  // Update booking (used by mentor to accept, reject etc.)
-  async updateBooking(id: number, dto: UpdateBookingDto): Promise<Booking> {
+  async updateBooking(id: number, dto: UpdateBookingDto) {
     const booking = await this.bookingRepo.findOne({ where: { id } });
     if (!booking) throw new NotFoundException('Booking not found');
 
     Object.assign(booking, dto);
-    return await this.bookingRepo.save(booking);
+    await this.bookingRepo.save(booking);
+    return {
+      success: true,
+      message: 'Booking updated successfully',
+    };
   }
 
-  // Get all bookings
-  async findAll(): Promise<Booking[]> {
-    return this.bookingRepo.find({ relations: ['slot', 'member'] });
+  async findAll() {
+    const bookings = await this.bookingRepo.find({
+      relations: ['slot', 'member'],
+    });
+    return {
+      success: true,
+      data: bookings,
+    };
   }
 
-  // Get booking by ID
-  async findOne(id: number): Promise<Booking> {
+  async findOne(id: number) {
     const booking = await this.bookingRepo.findOne({
       where: { id },
       relations: ['slot', 'member'],
     });
     if (!booking) throw new NotFoundException('Booking not found');
-    return booking;
+    return {
+      success: true,
+      data: booking,
+    };
   }
 
-  // Mentor accepts a booking and sets Google Meet link
-  async acceptBooking(id: number, meetLink: string): Promise<Booking> {
-    const booking = await this.findOne(id);
+  async acceptBooking(id: number, meetLink: string) {
+    const bookingResult = await this.findOne(id);
+    const booking = bookingResult.data;
     booking.status = BookingStatus.ACCEPTED;
     booking.google_meet_link = meetLink;
     const slot = booking.mentorSlot;
     slot.is_booked = true;
     await this.slotRepo.save(slot);
-    return await this.bookingRepo.save(booking);
+    await this.bookingRepo.save(booking);
+    return {
+      success: true,
+      message: 'Booking accepted successfully',
+    };
   }
 
-  // Member cancels booking
-  async cancelBooking(id: number): Promise<Booking> {
-    const booking = await this.findOne(id);
+  async cancelBooking(id: number) {
+    const bookingResult = await this.findOne(id);
+    const booking = bookingResult.data;
     booking.status = BookingStatus.CANCELLED;
-    return await this.bookingRepo.save(booking);
+    await this.bookingRepo.save(booking);
+    return {
+      success: true,
+      message: 'Booking cancelled successfully',
+    };
   }
 
-  // Update payment status
-  async markAsPaid(id: number): Promise<Booking> {
-    const booking = await this.findOne(id);
+  async markAsPaid(id: number) {
+    const bookingResult = await this.findOne(id);
+    const booking = bookingResult.data;
     booking.payment_status = PaymentStatus.PAID;
-    return await this.bookingRepo.save(booking);
+    await this.bookingRepo.save(booking);
+    return {
+      success: true,
+      message: 'Payment marked as paid successfully',
+    };
   }
 }

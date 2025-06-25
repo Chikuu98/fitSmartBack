@@ -27,6 +27,8 @@ export class UsersService {
       password: hashedPassword,
       gender: dto.gender,
       role: UserRole.MEMBER,
+      country: dto.country,
+      language: dto.language,
     });
 
     const savedUser = await this.userRepo.save(user);
@@ -59,6 +61,8 @@ export class UsersService {
       password: hashedPassword,
       gender: dto.gender,
       role: UserRole.MENTOR,
+      country: dto.country,
+      language: dto.language,
     });
 
     const savedUser = await this.userRepo.save(user);
@@ -67,8 +71,6 @@ export class UsersService {
       user: savedUser,
       expertise: dto.expertise,
       bio: dto.bio,
-      country: dto.country,
-      language: dto.language,
       certifications: dto.certifications,
       social_links: dto.social_links,
       contact_number: dto.contact_number,

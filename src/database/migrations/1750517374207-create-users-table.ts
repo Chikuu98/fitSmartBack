@@ -24,6 +24,16 @@ export class CreateUsersTable1750517374207 implements MigrationInterface {
             default: "'member'",
           },
           {
+            name: 'country',
+            type: 'varchar',
+            length: '100',
+          },
+          {
+            name: 'language',
+            type: 'varchar',
+            length: '100',
+          },
+          {
             name: 'created_at',
             type: 'timestamp',
             default: 'CURRENT_TIMESTAMP',

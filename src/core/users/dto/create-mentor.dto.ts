@@ -17,6 +17,7 @@ export class CreateMentorDto {
   name: string;
 
   @IsEmail()
+  @IsNotEmpty()
   @ApiProperty({ example: 'mentor@example.com' })
   email: string;
 
@@ -38,11 +39,6 @@ export class CreateMentorDto {
 
   @IsString()
   @IsNotEmpty()
-  @ApiProperty({ example: 'Certified trainer with 10 years of experience.' })
-  bio: string;
-
-  @IsString()
-  @IsNotEmpty()
   @ApiProperty({ example: 'Sri Lanka' })
   country: string;
 
@@ -50,6 +46,13 @@ export class CreateMentorDto {
   @IsNotEmpty()
   @ApiProperty({ example: 'English' })
   language: string;
+
+  @IsOptional()
+  @ApiProperty({
+    example: 'Certified trainer with 10 years of experience.',
+    required: false,
+  })
+  bio: string;
 
   @IsOptional()
   @IsString()
