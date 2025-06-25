@@ -16,17 +16,11 @@ export class MentorDetails {
   @JoinColumn()
   user: User;
 
-  @Column({ length: 255 })
+  @Column({ length: 255})
   expertise: string;
 
-  @Column({ length: 255 })
+  @Column({ length: 255, nullable: true  })
   bio: string;
-
-  @Column({ length: 100 })
-  country: string;
-
-  @Column({ length: 100 })
-  language: string;
 
   @Column({ length: 255, nullable: true })
   certifications: string;

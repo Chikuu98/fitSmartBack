@@ -22,6 +22,8 @@ async function seedAdmin() {
     password: hashedPassword,
     role: UserRole.ADMIN,
     gender: Gender.MALE,
+    country: 'Sri Lanka',
+    language: 'Sinhala',
     created_at: new Date(),
     updated_at: new Date(),
   });

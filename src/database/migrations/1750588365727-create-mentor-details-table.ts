@@ -24,21 +24,13 @@ export class CreateMentorDetailsTable1750588365727
             name: 'expertise',
             type: 'varchar',
             length: '255',
+            isNullable: false,
           },
           {
             name: 'bio',
             type: 'varchar',
             length: '255',
-          },
-          {
-            name: 'country',
-            type: 'varchar',
-            length: '100',
-          },
-          {
-            name: 'language',
-            type: 'varchar',
-            length: '100',
+            isNullable: true,
           },
           {
             name: 'certifications',

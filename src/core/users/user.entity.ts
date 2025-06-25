@@ -43,6 +43,12 @@ export class User {
   @Column({ type: 'enum', enum: Gender })
   gender: Gender;
 
+  @Column({ length: 100 })
+  country: string;
+
+  @Column({ length: 100 })
+  language: string;
+
   @CreateDateColumn()
   created_at: Date;
 
