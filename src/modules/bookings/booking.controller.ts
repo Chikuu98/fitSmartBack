@@ -41,6 +41,18 @@ export class BookingController {
     return this.bookingService.findOne(id);
   }
 
+  @Get('member/:memberId')
+  @Roles(UserRole.MEMBER)
+  async findByMemberId(@Param('memberId', ParseIntPipe) memberId: number) {
+    return this.bookingService.findByMemberId(memberId);
+  }
+
+  @Get('mentor/:mentorId')
+  @Roles(UserRole.MENTOR)
+  async findByMentorId(@Param('mentorId', ParseIntPipe) mentorId: number) {
+    return this.bookingService.findByMentorId(mentorId);
+  }
+
   @Patch(':id')
   async update(
     @Param('id', ParseIntPipe) id: number,

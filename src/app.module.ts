@@ -9,7 +9,6 @@ import { BookingModule } from './modules/bookings/booking.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
-
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -21,7 +20,7 @@ import { AppService } from './app.service';
     UsersModule,
     AuthModule,
     MentorSlotsModule,
-    BookingModule
+    BookingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -23,4 +23,3 @@ export const AppDataSource = new DataSource({
 
 //npx typeorm migration:generate src/database/migrations/create-users-table -d src/config/data-source.ts
 //npx typeorm migration:create src/database/migrations/create-users-table
-

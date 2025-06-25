@@ -15,8 +15,6 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT') ?? 3000;
 
-  app.useGlobalFilters(new AllExceptionsFilter());
-
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -35,6 +33,8 @@ async function bootstrap() {
       },
     }),
   );
+
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   app.enableCors({
     origin: configService.get<number>('FRONTEND_URL') ?? '*',

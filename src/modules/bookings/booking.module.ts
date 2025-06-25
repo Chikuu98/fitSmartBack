@@ -6,7 +6,6 @@ import { MentorTimeSlot } from '../mentorSlots/slots/mentor_time_slot.entity';
 import { BookingService } from './booking.service';
 import { BookingController } from './booking.controller';
 
-
 @Module({
   imports: [TypeOrmModule.forFeature([Booking, User, MentorTimeSlot])],
   providers: [BookingService],

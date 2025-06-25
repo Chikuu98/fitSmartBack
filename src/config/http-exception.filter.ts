@@ -17,6 +17,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Internal server error';
     let errorCode = 'INTERNAL_SERVER_ERROR';
+    let validationErrors: any = undefined;
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
@@ -25,24 +26,33 @@ export class AllExceptionsFilter implements ExceptionFilter {
       if (typeof res === 'string') {
         message = res;
       } else if (typeof res === 'object') {
-        const errorResponse = res as Record<string, any>;
+        const err = res as Record<string, any>;
 
-        message = errorResponse.message || message;
+        message = err.message || message;
+
+        // ✅ Preserve validation errors
+        if (err.validation_errors) {
+          validationErrors = err.validation_errors;
+        }
+
         errorCode =
-          errorResponse.errorCode ||
-          errorResponse.error ||
-          HttpStatus[status] ||
-          'UNKNOWN_ERROR';
+          err.errorCode || err.error || HttpStatus[status] || 'UNKNOWN_ERROR';
       }
     }
 
-    response.status(status).json({
+    const responseBody: Record<string, any> = {
       success: false,
       message,
       errorCode,
       statusCode: status,
       timestamp: new Date().toISOString(),
       path: request.url,
-    });
+    };
+
+    if (validationErrors) {
+      responseBody['validation_errors'] = validationErrors;
+    }
+
+    response.status(status).json(responseBody);
   }
 }

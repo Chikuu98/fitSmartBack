@@ -1,7 +1,11 @@
-import { MigrationInterface, QueryRunner, Table, TableForeignKey } from "typeorm";
+import {
+  MigrationInterface,
+  QueryRunner,
+  Table,
+  TableForeignKey,
+} from 'typeorm';
 
 export class CreateBookingsTable1750661356745 implements MigrationInterface {
-
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.createTable(
       new Table({
@@ -52,7 +56,7 @@ export class CreateBookingsTable1750661356745 implements MigrationInterface {
             onUpdate: 'CURRENT_TIMESTAMP',
           },
         ],
-      })
+      }),
     );
 
     await queryRunner.createForeignKeys('bookings', [
@@ -74,5 +78,4 @@ export class CreateBookingsTable1750661356745 implements MigrationInterface {
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.dropTable('bookings');
   }
-
 }
