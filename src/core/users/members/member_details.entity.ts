@@ -22,21 +22,26 @@ export class MemberDetails {
   @JoinColumn()
   user: User;
 
-  @Column({ nullable: true  })
+  @Column({ nullable: true })
   age: number;
 
-  @Column('decimal', { precision: 5, scale: 2, nullable: true  })
+  @Column('decimal', { precision: 5, scale: 2, nullable: true })
   height: number;
 
-  @Column('decimal', { precision: 5, scale: 2, nullable: true  })
+  @Column('decimal', { precision: 5, scale: 2, nullable: true })
   weight: number;
 
-  @Column({ type: 'enum', enum: FitnessLevel, default: FitnessLevel.BEGINNER, nullable: true  })
+  @Column({
+    type: 'enum',
+    enum: FitnessLevel,
+    default: FitnessLevel.BEGINNER,
+    nullable: true,
+  })
   fitness_level: FitnessLevel;
 
-  @Column({ length: 100, nullable: true  })
+  @Column({ length: 100, nullable: true })
   goal: string;
 
-  @Column({ length: 100, nullable: true  })
+  @Column({ length: 100, nullable: true })
   dietary_preference: string;
 }

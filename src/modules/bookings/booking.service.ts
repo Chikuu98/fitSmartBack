@@ -66,7 +66,33 @@ export class BookingService {
 
   async findAll() {
     const bookings = await this.bookingRepo.find({
-      relations: ['slot', 'member'],
+      relations: ['mentorSlot', 'member'],
+    });
+    return {
+      success: true,
+      data: bookings,
+    };
+  }
+
+  async findByMemberId(memberId: number) {
+    const member = await this.userRepo.findOne({ where: { id: memberId } });
+    if (!member) throw new NotFoundException('Member not found');
+    const bookings = await this.bookingRepo.find({
+      where: { member },
+      relations: ['mentorSlot', 'member'],
+    });
+    return {
+      success: true,
+      data: bookings,
+    };
+  }
+
+  async findByMentorId(mentorId: number) {
+    const mentor = await this.userRepo.findOne({ where: { id: mentorId } });
+    if (!mentor) throw new NotFoundException('Mentor not found');
+    const bookings = await this.bookingRepo.find({
+      where: { mentorSlot: { mentor: mentor } },
+      relations: ['mentorSlot', 'member'],
     });
     return {
       success: true,
@@ -77,7 +103,7 @@ export class BookingService {
   async findOne(id: number) {
     const booking = await this.bookingRepo.findOne({
       where: { id },
-      relations: ['slot', 'member'],
+      relations: ['mentorSlot', 'member'],
     });
     if (!booking) throw new NotFoundException('Booking not found');
     return {

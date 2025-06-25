@@ -10,6 +10,6 @@ import { MentorSlotsService } from './mentor-slots.service';
   imports: [TypeOrmModule.forFeature([MentorTimeSlot])],
   controllers: [MentorSlotsController],
   providers: [MentorSlotsService],
-  exports: [MentorSlotsService], 
+  exports: [MentorSlotsService],
 })
 export class MentorSlotsModule {}

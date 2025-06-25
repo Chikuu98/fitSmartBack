@@ -16,10 +16,10 @@ export class MentorDetails {
   @JoinColumn()
   user: User;
 
-  @Column({ length: 255})
+  @Column({ length: 255 })
   expertise: string;
 
-  @Column({ length: 255, nullable: true  })
+  @Column({ length: 255, nullable: true })
   bio: string;
 
   @Column({ length: 255, nullable: true })

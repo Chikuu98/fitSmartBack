@@ -7,7 +7,9 @@ async function seedAdmin() {
 
   const userRepo = AppDataSource.getRepository(User);
 
-  const existing = await userRepo.findOne({ where: { email: 'admin@fitsmart.com' } });
+  const existing = await userRepo.findOne({
+    where: { email: 'admin@fitsmart.com' },
+  });
 
   if (existing) {
     console.log('Admin user already exists');
