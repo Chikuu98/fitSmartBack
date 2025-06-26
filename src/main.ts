@@ -37,9 +37,9 @@ async function bootstrap() {
   app.useGlobalFilters(new AllExceptionsFilter());
 
   app.enableCors({
-    origin: configService.get<number>('FRONTEND_URL') ?? '*',
+    origin: configService.get<string>('FRONTEND_URL') ?? '*',
     credentials: true,
-    methods: '*',
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
 
   await app.listen(port);

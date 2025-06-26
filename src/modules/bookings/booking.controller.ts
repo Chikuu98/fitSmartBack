@@ -17,6 +17,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { UserRole } from '@/core/users/user.entity';
 import { Roles } from '@/common/decorators/roles.decorator';
+import { AcceptBookingDto } from './dto/accept-booking.dto';
 
 @ApiTags('Bookings')
 @ApiBearerAuth()
@@ -65,9 +66,12 @@ export class BookingController {
   @Roles(UserRole.MENTOR)
   async accept(
     @Param('id', ParseIntPipe) id: number,
-    @Body('google_meet_link') googleMeetLink: string,
+    @Body() acceptBookingDto: AcceptBookingDto,
   ) {
-    return this.bookingService.acceptBooking(id, googleMeetLink);
+    return this.bookingService.acceptBooking(
+      id,
+      acceptBookingDto.google_meet_link,
+    );
   }
 
   @Patch(':id/cancel')
