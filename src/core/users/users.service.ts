@@ -126,4 +126,42 @@ export class UsersService {
 
     return instanceToPlain(userEntity);
   }
+
+  async findMentorsWithFilter(country?: string, language?: string, authUser?: any): Promise<any> {
+    const query = this.userRepo.createQueryBuilder('user')
+      .leftJoinAndSelect('user.mentorDetails', 'mentorDetails')
+      .where('user.role = :role', { role: UserRole.MENTOR });
+
+    // Determine filter values
+    let filterCountry = country;
+    let filterLanguage = language;
+
+    // If no filters provided and authUser exists, use auth user's preferences
+    if (!country && !language && authUser?.userId) {
+      const userEntity = await this.userRepo.findOne({ 
+        where: { id: authUser.userId },
+        select: ['country', 'language'] // Only fetch needed fields
+      });
+      
+      if (userEntity) {
+        filterCountry = userEntity.country;
+        filterLanguage = userEntity.language;
+      }
+    }
+
+    // Apply filters if they exist
+    if (filterCountry) {
+      query.andWhere('user.country = :country', { country: filterCountry });
+    }
+    if (filterLanguage) {
+      query.andWhere('user.language = :language', { language: filterLanguage });
+    }
+
+    const mentors = await query.getMany();
+    
+    return {
+      success: true,
+      data: mentors.map((mentor) => instanceToPlain(mentor)),
+    };
+  }
 }

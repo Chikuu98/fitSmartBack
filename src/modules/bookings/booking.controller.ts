@@ -15,7 +15,7 @@ import { UpdateBookingDto } from '@/modules/bookings/dto/update-booking.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { RolesGuard } from '@/common/guards/roles.guard';
-import { UserRole } from '@/core/users/user.entity';
+import { User, UserRole } from '@/core/users/user.entity';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { AcceptBookingDto } from './dto/accept-booking.dto';
 
@@ -75,7 +75,7 @@ export class BookingController {
   }
 
   @Patch(':id/cancel')
-  @Roles(UserRole.MEMBER)
+  @Roles(UserRole.MEMBER, UserRole.MENTOR)
   async cancel(@Param('id', ParseIntPipe) id: number) {
     return this.bookingService.cancelBooking(id);
   }
