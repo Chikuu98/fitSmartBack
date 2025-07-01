@@ -79,7 +79,7 @@ export class BookingService {
     if (!member) throw new NotFoundException('Member not found');
     const bookings = await this.bookingRepo.find({
       where: { member },
-      relations: ['mentorSlot', 'member'],
+      relations: ['mentorSlot.mentor', 'member'],
     });
     return {
       success: true,
