@@ -56,16 +56,6 @@ export class CreateMentorDto {
 
   @IsOptional()
   @IsString()
-  @ApiProperty({ example: 'ACE, NASM', required: false })
-  certifications?: string;
-
-  @IsOptional()
-  @IsString()
-  @ApiProperty({ example: 'https://linkedin.com/in/mentor', required: false })
-  social_links?: string;
-
-  @IsOptional()
-  @IsString()
   @ApiProperty({ example: '+94771234567', required: false })
   contact_number?: string;
 }

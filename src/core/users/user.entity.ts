@@ -7,8 +7,8 @@ import {
   OneToOne,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
-import { MemberDetails } from '@/core/users/members/member_details.entity';
-import { MentorDetails } from '@/core/users/mentors/mentor_details.entity';
+import { MemberDetail } from '@/core/users/members/member_detail.entity';
+import { MentorDetail } from '@/core/users/mentors/mentor_detail.entity';
 
 export enum Gender {
   MALE = 'male',
@@ -55,9 +55,9 @@ export class User {
   @UpdateDateColumn()
   updated_at: Date;
 
-  @OneToOne(() => MemberDetails, (details) => details.user, { cascade: true })
-  memberDetails: MemberDetails;
+  @OneToOne(() => MemberDetail, (details) => details.user, { cascade: true })
+  memberDetail: MemberDetail;
 
-  @OneToOne(() => MentorDetails, (details) => details.user, { cascade: true })
-  mentorDetails: MentorDetails;
+  @OneToOne(() => MentorDetail, (details) => details.user, { cascade: true })
+  mentorDetail: MentorDetail;
 }
