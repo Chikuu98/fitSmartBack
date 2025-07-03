@@ -12,10 +12,10 @@ export class MentorSlotsService {
     private timeSlotRepo: Repository<MentorTimeSlot>,
   ) {}
 
-  async createSlot(dto: CreateSlotDto, mentorId: number) {
+  async createSlot(dto: CreateSlotDto, mentor_id: number) {
     const slot = this.timeSlotRepo.create({
       ...dto,
-      mentor: { id: mentorId },
+      mentor: { id: mentor_id },
     });
     await this.timeSlotRepo.save(slot);
     return {
@@ -24,9 +24,9 @@ export class MentorSlotsService {
     };
   }
 
-  async updateSlot(slotId: number, dto: UpdateSlotDto, mentorId: number) {
+  async updateSlot(slotId: number, dto: UpdateSlotDto, mentor_id: number) {
     const slot = await this.timeSlotRepo.findOne({
-      where: { id: slotId, mentor: { id: mentorId } },
+      where: { id: slotId, mentor: { id: mentor_id } },
     });
     if (!slot) {
       throw new NotFoundException('Slot not found');
@@ -41,9 +41,9 @@ export class MentorSlotsService {
     };
   }
 
-  async getMentorSlots(mentorId: number) {
+  async getMentorSlots(mentor_id: number) {
     const slots = await this.timeSlotRepo.find({
-      where: { mentor: { id: mentorId }, is_booked: false },
+      where: { mentor: { id: mentor_id }, is_booked: false },
     });
     return {
       success: true,

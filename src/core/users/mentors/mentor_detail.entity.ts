@@ -1,4 +1,3 @@
-
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -17,17 +16,18 @@ export class MentorDetail {
   id: number;
 
   @OneToOne(() => User, (user) => user.mentorDetail, { onDelete: 'CASCADE' })
-  @JoinColumn()
+  @JoinColumn({ name: 'user_id' })
   user: User;
 
   @Column({ length: 255 })
   expertise: string;
 
-
   @Column({ length: 255, nullable: true })
   bio: string;
 
-  @OneToMany(() => Certification, (cert) => cert.mentorDetail, { cascade: true })
+  @OneToMany(() => Certification, (cert) => cert.mentorDetail, {
+    cascade: true,
+  })
   certification: Certification[];
 
   @OneToMany(() => SocialLink, (link) => link.mentorDetail, { cascade: true })

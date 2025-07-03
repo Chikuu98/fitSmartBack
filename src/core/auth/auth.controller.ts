@@ -2,7 +2,12 @@ import { Controller, Post, Body } from '@nestjs/common';
 import { AuthService } from '@/core/auth/auth.service';
 import { UsersService } from '@/core/users/users.service';
 import { LoginDto } from '@/core/auth/dto/login.dto';
-import { ApiBody, ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiCreatedResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { User } from '@/core/users/user.entity';
 import { CreateMemberDto } from '@/core/users/dto/create-member.dto';
 import { CreateMentorDto } from '@/core/users/dto/create-mentor.dto';

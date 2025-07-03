@@ -15,7 +15,7 @@ export class MentorTimeSlot {
   id: number;
 
   @ManyToOne(() => User, (user) => user.id, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'mentorId' })
+  @JoinColumn({ name: 'mentor_id' })
   mentor: User;
 
   @Column({ type: 'date' })

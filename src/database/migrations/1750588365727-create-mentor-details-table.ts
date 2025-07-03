@@ -16,7 +16,7 @@ export class CreateMentorDetailsTable1750588365727
             generationStrategy: 'increment',
           },
           {
-            name: 'userId',
+            name: 'user_id',
             type: 'int',
             isUnique: true,
           },
@@ -51,7 +51,7 @@ export class CreateMentorDetailsTable1750588365727
         ],
         foreignKeys: [
           {
-            columnNames: ['userId'],
+            columnNames: ['user_id'],
             referencedTableName: 'users',
             referencedColumnNames: ['id'],
             onDelete: 'CASCADE',

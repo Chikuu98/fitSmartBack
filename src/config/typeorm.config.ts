@@ -7,6 +7,7 @@ import { MentorTimeSlot } from '@/modules/mentorSlots/slots/mentor_time_slot.ent
 import { Booking } from '@/modules/bookings/booking.entity';
 import { Certification } from '@/core/users/mentors/certification.entity';
 import { SocialLink } from '@/core/users/mentors/social_link.entity';
+import { BookingPayment } from '@/modules/bookings/booking_payments/booking_payment.entity';
 
 export const typeOrmConfig = (
   configService: ConfigService,
@@ -17,6 +18,15 @@ export const typeOrmConfig = (
   username: configService.get<string>('DB_USERNAME'),
   password: configService.get<string>('DB_PASSWORD'),
   database: configService.get<string>('DB_NAME'),
-  entities: [User, MemberDetail, MentorDetail, MentorTimeSlot, Booking, Certification, SocialLink],
+  entities: [
+    User,
+    MemberDetail,
+    MentorDetail,
+    MentorTimeSlot,
+    Booking,
+    Certification,
+    SocialLink,
+    BookingPayment,
+  ],
   synchronize: false,
 });

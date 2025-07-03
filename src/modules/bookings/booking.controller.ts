@@ -30,7 +30,7 @@ export class BookingController {
   @ApiOperation({ summary: 'Create a new booking' })
   @Roles(UserRole.MEMBER)
   async create(@Body() createDto: CreateBookingDto, @Req() req: any) {
-    return this.bookingService.createBooking(createDto, req.user.userId);
+    return this.bookingService.createBooking(createDto, req.user.user_id);
   }
 
   @Get()
@@ -45,18 +45,18 @@ export class BookingController {
     return this.bookingService.findOne(id);
   }
 
-  @Get('member/:memberId')
+  @Get('member/:member_id')
   @ApiOperation({ summary: 'Get bookings by member ID' })
   @Roles(UserRole.MEMBER)
-  async findByMemberId(@Param('memberId', ParseIntPipe) memberId: number) {
-    return this.bookingService.findByMemberId(memberId);
+  async findByMemberId(@Param('member_id', ParseIntPipe) member_id: number) {
+    return this.bookingService.findByMemberId(member_id);
   }
 
-  @Get('mentor/:mentorId')
+  @Get('mentor/:mentor_id')
   @ApiOperation({ summary: 'Get bookings by mentor ID' })
   @Roles(UserRole.MENTOR)
-  async findByMentorId(@Param('mentorId', ParseIntPipe) mentorId: number) {
-    return this.bookingService.findByMentorId(mentorId);
+  async findByMentorId(@Param('mentor_id', ParseIntPipe) mentor_id: number) {
+    return this.bookingService.findByMentorId(mentor_id);
   }
 
   @Patch(':id')

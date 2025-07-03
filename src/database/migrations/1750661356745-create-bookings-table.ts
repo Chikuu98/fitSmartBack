@@ -33,12 +33,6 @@ export class CreateBookingsTable1750661356745 implements MigrationInterface {
             default: `'pending'`,
           },
           {
-            name: 'payment_status',
-            type: 'enum',
-            enum: ['unpaid', 'paid', 'refunded'],
-            default: `'unpaid'`,
-          },
-          {
             name: 'google_meet_link',
             type: 'varchar',
             length: '500',

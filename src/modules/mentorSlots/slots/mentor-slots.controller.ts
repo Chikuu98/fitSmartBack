@@ -27,8 +27,8 @@ export class MentorSlotsController {
   @ApiOperation({ summary: 'Create a new mentor slot' })
   @Post()
   async createSlot(@Body() dto: CreateSlotDto, @Req() req) {
-    const mentorId = req.user.userId;
-    return this.mentorSlotService.createSlot(dto, mentorId);
+    const mentor_id = req.user.user_id;
+    return this.mentorSlotService.createSlot(dto, mentor_id);
   }
 
   @Roles(UserRole.MENTOR)
@@ -39,14 +39,14 @@ export class MentorSlotsController {
     @Body() dto: UpdateSlotDto,
     @Req() req: any,
   ) {
-    const mentorId = req.user.userId;
-    return this.mentorSlotService.updateSlot(slotId, dto, mentorId);
+    const mentor_id = req.user.user_id;
+    return this.mentorSlotService.updateSlot(slotId, dto, mentor_id);
   }
 
-  @Get('mentor/:mentorId')
+  @Get('mentor/:mentor_id')
   @ApiOperation({ summary: 'Get all slots for a mentor' })
-  async getMentorSlots(@Param('mentorId') mentorId: number) {
-    return this.mentorSlotService.getMentorSlots(mentorId);
+  async getMentorSlots(@Param('mentor_id') mentor_id: number) {
+    return this.mentorSlotService.getMentorSlots(mentor_id);
   }
 
   @Get(':slotId')

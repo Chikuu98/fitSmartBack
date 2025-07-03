@@ -15,7 +15,7 @@ export class CreateMentorTimeSlotsTable1750610272757
             isGenerated: true,
             generationStrategy: 'increment',
           },
-          { name: 'mentorId', type: 'int' },
+          { name: 'mentor_id', type: 'int' },
           { name: 'date', type: 'date' },
           { name: 'start_time', type: 'time' },
           { name: 'end_time', type: 'time' },
@@ -33,7 +33,7 @@ export class CreateMentorTimeSlotsTable1750610272757
         ],
         foreignKeys: [
           {
-            columnNames: ['mentorId'],
+            columnNames: ['mentor_id'],
             referencedTableName: 'users',
             referencedColumnNames: ['id'],
             onDelete: 'CASCADE',
