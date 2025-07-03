@@ -8,6 +8,7 @@ import { MentorTimeSlot } from '@/modules/mentorSlots/slots/mentor_time_slot.ent
 import { Booking } from '@/modules/bookings/booking.entity';
 import { Certification } from '@/core/users/mentors/certification.entity';
 import { SocialLink } from '@/core/users/mentors/social_link.entity';
+import { BookingPayment } from '@/modules/bookings/booking_payments/booking_payment.entity';
 
 dotenv.config();
 
@@ -18,7 +19,16 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USERNAME,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  entities: [User, MemberDetail, MentorDetail, MentorTimeSlot, Booking, Certification, SocialLink],
+  entities: [
+    User,
+    MemberDetail,
+    MentorDetail,
+    MentorTimeSlot,
+    Booking,
+    Certification,
+    SocialLink,
+    BookingPayment,
+  ],
   migrations: ['src/database/migrations/*.ts'],
   synchronize: false,
 });

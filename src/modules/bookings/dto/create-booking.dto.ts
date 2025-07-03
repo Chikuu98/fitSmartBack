@@ -22,10 +22,6 @@ export class CreateBookingDto {
     enum: PaymentStatus,
     description: 'Payment status of the booking',
   })
-  @IsOptional()
-  @IsEnum(PaymentStatus)
-  payment_status?: PaymentStatus;
-
   @ApiPropertyOptional({
     example: 'https://meet.google.com/xyz-abc',
     description: 'Google Meet link for the session',

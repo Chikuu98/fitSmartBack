@@ -12,7 +12,11 @@ export class UpdateCertificationDto {
   @IsString()
   issuer?: string;
 
-  @ApiPropertyOptional({ description: 'Date the certification was issued', type: String, format: 'date-time' })
+  @ApiPropertyOptional({
+    description: 'Date the certification was issued',
+    type: String,
+    format: 'date-time',
+  })
   @IsOptional()
   @IsDateString()
   issue_date?: string;

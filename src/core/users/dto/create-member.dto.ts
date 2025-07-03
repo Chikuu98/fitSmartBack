@@ -10,7 +10,7 @@ import {
 } from 'class-validator';
 import { Gender } from '@/core/users/user.entity';
 import { ApiProperty } from '@nestjs/swagger';
-import { FitnessLevel } from '@/core/users/members/member_details.entity';
+import { FitnessLevel } from '@/core/users/members/member_detail.entity';
 
 export class CreateMemberDto {
   @IsString()

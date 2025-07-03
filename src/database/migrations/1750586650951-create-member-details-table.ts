@@ -15,7 +15,7 @@ export class CreateMemberDetailsTable1750586650951
             isGenerated: true,
             generationStrategy: 'increment',
           },
-          { name: 'userId', type: 'int', isUnique: true },
+          { name: 'user_id', type: 'int', isUnique: true },
           { name: 'age', type: 'int', isNullable: true },
           {
             name: 'height',
@@ -58,7 +58,7 @@ export class CreateMemberDetailsTable1750586650951
         ],
         foreignKeys: [
           {
-            columnNames: ['userId'],
+            columnNames: ['user_id'],
             referencedTableName: 'users',
             referencedColumnNames: ['id'],
             onDelete: 'CASCADE',

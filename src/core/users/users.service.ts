@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { User, UserRole } from './user.entity';
@@ -112,17 +117,21 @@ export class UsersService {
   }
 
   async findMe(user: any): Promise<any> {
-    const userId = user.userId;
+    const user_id = user.user_id;
     let relations: string[] = [];
 
     if (user.role === 'member' || user.role === UserRole.MEMBER) {
       relations = ['memberDetail'];
     } else if (user.role === 'mentor' || user.role === UserRole.MENTOR) {
-      relations = ['mentorDetail', 'mentorDetail.certification', 'mentorDetail.socialLink'];
+      relations = [
+        'mentorDetail',
+        'mentorDetail.certification',
+        'mentorDetail.socialLink',
+      ];
     }
 
     const userEntity = await this.userRepo.findOne({
-      where: { id: userId },
+      where: { id: user_id },
       relations,
     });
 
@@ -132,8 +141,13 @@ export class UsersService {
 
     return instanceToPlain(userEntity);
   }
-  async findMentorsWithFilter(country?: string, language?: string, authUser?: any): Promise<any> {
-    const query = this.userRepo.createQueryBuilder('user')
+  async findMentorsWithFilter(
+    country?: string,
+    language?: string,
+    authUser?: any,
+  ): Promise<any> {
+    const query = this.userRepo
+      .createQueryBuilder('user')
       .leftJoinAndSelect('user.mentorDetail', 'mentorDetail')
       .leftJoinAndSelect('mentorDetail.certification', 'certification')
       .leftJoinAndSelect('mentorDetail.socialLink', 'socialLink')
@@ -142,12 +156,12 @@ export class UsersService {
     let filterCountry = country;
     let filterLanguage = language;
 
-    if (!country && !language && authUser?.userId) {
-      const userEntity = await this.userRepo.findOne({ 
-        where: { id: authUser.userId },
-        select: ['country', 'language']
+    if (!country && !language && authUser?.user_id) {
+      const userEntity = await this.userRepo.findOne({
+        where: { id: authUser.user_id },
+        select: ['country', 'language'],
       });
-      
+
       if (userEntity) {
         filterCountry = userEntity.country;
         filterLanguage = userEntity.language;
@@ -162,16 +176,16 @@ export class UsersService {
     }
 
     const mentors = await query.getMany();
-    
+
     return {
       success: true,
       data: mentors.map((mentor) => instanceToPlain(mentor)),
     };
   }
 
-  async updateUser(userId: number, dto: UpdateUserDto, currentUser: any) {
+  async updateUser(user_id: number, dto: UpdateUserDto, currentUser: any) {
     const user = await this.userRepo.findOne({
-      where: { id: userId },
+      where: { id: user_id },
       relations: ['memberDetail', 'mentorDetail'],
     });
 
@@ -179,13 +193,16 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    if (currentUser.role !== UserRole.ADMIN && currentUser.userId !== userId) {
+    if (
+      currentUser.role !== UserRole.ADMIN &&
+      currentUser.user_id !== user_id
+    ) {
       throw new BadRequestException('You can only update your own profile');
     }
 
     if (dto.email && dto.email !== user.email) {
-      const existingUser = await this.userRepo.findOne({ 
-        where: { email: dto.email } 
+      const existingUser = await this.userRepo.findOne({
+        where: { email: dto.email },
       });
       if (existingUser) {
         throw new ConflictException('Email is already in use');
@@ -208,7 +225,7 @@ export class UsersService {
     }
 
     const updatedUser = await this.userRepo.findOne({
-      where: { id: userId },
+      where: { id: user_id },
       relations,
     });
 
@@ -219,9 +236,13 @@ export class UsersService {
     };
   }
 
-  async updateMemberDetails(userId: number, dto: UpdateMemberDetailsDto, currentUser: any) {
+  async updateMemberDetails(
+    user_id: number,
+    dto: UpdateMemberDetailsDto,
+    currentUser: any,
+  ) {
     const user = await this.userRepo.findOne({
-      where: { id: userId },
+      where: { id: user_id },
       relations: ['memberDetail'],
     });
 
@@ -233,7 +254,10 @@ export class UsersService {
       throw new BadRequestException('User is not a member');
     }
 
-    if (currentUser.role !== UserRole.ADMIN && currentUser.userId !== userId) {
+    if (
+      currentUser.role !== UserRole.ADMIN &&
+      currentUser.user_id !== user_id
+    ) {
       throw new BadRequestException('You can only update your own details');
     }
 
@@ -246,11 +270,15 @@ export class UsersService {
     if (dto.age !== undefined) memberDetail.age = dto.age;
     if (dto.height !== undefined) memberDetail.height = dto.height;
     if (dto.weight !== undefined) memberDetail.weight = dto.weight;
-    if (dto.fitness_level !== undefined) memberDetail.fitness_level = dto.fitness_level;
+    if (dto.fitness_level !== undefined)
+      memberDetail.fitness_level = dto.fitness_level;
     if (dto.goal !== undefined) memberDetail.goal = dto.goal;
-    if (dto.dietary_preference !== undefined) memberDetail.dietary_preference = dto.dietary_preference;
+    if (dto.dietary_preference !== undefined)
+      memberDetail.dietary_preference = dto.dietary_preference;
 
-    const savedDetails = await this.dataSource.getRepository(MemberDetail).save(memberDetail);
+    const savedDetails = await this.dataSource
+      .getRepository(MemberDetail)
+      .save(memberDetail);
 
     return {
       success: true,
@@ -259,9 +287,13 @@ export class UsersService {
     };
   }
 
-  async updateMentorDetails(userId: number, dto: UpdateMentorDetailsDto, currentUser: any) {
+  async updateMentorDetails(
+    user_id: number,
+    dto: UpdateMentorDetailsDto,
+    currentUser: any,
+  ) {
     const user = await this.userRepo.findOne({
-      where: { id: userId },
+      where: { id: user_id },
       relations: ['mentorDetail'],
     });
 
@@ -273,7 +305,10 @@ export class UsersService {
       throw new BadRequestException('User is not a mentor');
     }
 
-    if (currentUser.role !== UserRole.ADMIN && currentUser.userId !== userId) {
+    if (
+      currentUser.role !== UserRole.ADMIN &&
+      currentUser.user_id !== user_id
+    ) {
       throw new BadRequestException('You can only update your own details');
     }
 
@@ -285,9 +320,12 @@ export class UsersService {
 
     if (dto.expertise !== undefined) mentorDetail.expertise = dto.expertise;
     if (dto.bio !== undefined) mentorDetail.bio = dto.bio;
-    if (dto.contact_number !== undefined) mentorDetail.contact_number = dto.contact_number;
+    if (dto.contact_number !== undefined)
+      mentorDetail.contact_number = dto.contact_number;
 
-    const savedDetails = await this.dataSource.getRepository(MentorDetail).save(mentorDetail);
+    const savedDetails = await this.dataSource
+      .getRepository(MentorDetail)
+      .save(mentorDetail);
 
     return {
       success: true,
@@ -296,40 +334,66 @@ export class UsersService {
     };
   }
 
-  async addCertification(userId: number, dto: CreateCertificationDto) {
-    const mentorDetail = await this.dataSource.getRepository(MentorDetail).findOne({
-      where: { user: { id: userId } },
-    });
+  async addCertification(user_id: number, dto: CreateCertificationDto) {
+    const mentorDetail = await this.dataSource
+      .getRepository(MentorDetail)
+      .findOne({
+        where: { user: { id: user_id } },
+        relations: ['user'],
+      });
     console.log('mentorDetail', mentorDetail);
     if (!mentorDetail) throw new NotFoundException('Mentor details not found');
-    const cert = this.dataSource.getRepository(Certification).create({ ...dto, mentorDetail });
+    const cert = this.dataSource
+      .getRepository(Certification)
+      .create({ ...dto, mentorDetail });
     await this.dataSource.getRepository(Certification).save(cert);
     return { success: true, message: 'Certification added', data: cert };
   }
 
-  async updateCertification(userId: number, id: number, dto: UpdateCertificationDto) {
+  async updateCertification(
+    user_id: number,
+    id: number,
+    dto: UpdateCertificationDto,
+  ) {
     const certRepo = this.dataSource.getRepository(Certification);
-    const cert = await certRepo.findOne({ where: { id }, relations: ['mentorDetail'] });
-    if (!cert || cert.mentorDetail.user.id !== userId) throw new NotFoundException('Certification not found or not yours');
+    const cert = await certRepo.findOne({
+      where: { id },
+      relations: ['mentorDetail'],
+    });
+    if (!cert || cert.mentorDetail.user.id !== user_id)
+      throw new NotFoundException('Certification not found or not yours');
     Object.assign(cert, dto);
     await certRepo.save(cert);
     return { success: true, message: 'Certification updated', data: cert };
   }
 
-  async addSocialLink(userId: number, dto: CreateSocialLinkDto) {
-    const mentorDetail = await this.dataSource.getRepository(MentorDetail).findOne({
-      where: { user: { id: userId } },
-    });
+  async addSocialLink(user_id: number, dto: CreateSocialLinkDto) {
+    const mentorDetail = await this.dataSource
+      .getRepository(MentorDetail)
+      .findOne({
+        where: { user: { id: user_id } },
+        relations: ['user'],
+      });
     if (!mentorDetail) throw new NotFoundException('Mentor details not found');
-    const link = this.dataSource.getRepository(SocialLink).create({ ...dto, mentorDetail });
+    const link = this.dataSource
+      .getRepository(SocialLink)
+      .create({ ...dto, mentorDetail });
     await this.dataSource.getRepository(SocialLink).save(link);
     return { success: true, message: 'Social link added', data: link };
   }
 
-  async updateSocialLink(userId: number, id: number, dto: UpdateSocialLinkDto) {
+  async updateSocialLink(
+    user_id: number,
+    id: number,
+    dto: UpdateSocialLinkDto,
+  ) {
     const linkRepo = this.dataSource.getRepository(SocialLink);
-    const link = await linkRepo.findOne({ where: { id }, relations: ['mentorDetail'] });
-    if (!link || link.mentorDetail.user.id !== userId) throw new NotFoundException('Social link not found or not yours');
+    const link = await linkRepo.findOne({
+      where: { id },
+      relations: ['mentorDetail'],
+    });
+    if (!link || link.mentorDetail.user.id !== user_id)
+      throw new NotFoundException('Social link not found or not yours');
     Object.assign(link, dto);
     await linkRepo.save(link);
     return { success: true, message: 'Social link updated', data: link };

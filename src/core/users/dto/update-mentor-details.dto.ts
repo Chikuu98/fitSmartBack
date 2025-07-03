@@ -1,17 +1,13 @@
-import {
-  IsOptional,
-  IsString,
-  Length,
-} from 'class-validator';
+import { IsOptional, IsString, Length } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateMentorDetailsDto {
   @IsOptional()
   @IsString()
   @Length(1, 255)
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     example: 'Nutrition and Weight Management Expert',
-    description: 'Mentor area of expertise'
+    description: 'Mentor area of expertise',
   })
   expertise?: string;
 
@@ -19,17 +15,18 @@ export class UpdateMentorDetailsDto {
   @IsString()
   @Length(1, 500)
   @ApiPropertyOptional({
-    example: 'Certified nutritionist and fitness trainer with over 15 years of experience helping clients achieve their health and wellness goals.',
-    description: 'Mentor biography'
+    example:
+      'Certified nutritionist and fitness trainer with over 15 years of experience helping clients achieve their health and wellness goals.',
+    description: 'Mentor biography',
   })
   bio?: string;
 
   @IsOptional()
   @IsString()
   @Length(1, 20)
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     example: '+1234567890',
-    description: 'Mentor contact number'
+    description: 'Mentor contact number',
   })
   contact_number?: string;
 }

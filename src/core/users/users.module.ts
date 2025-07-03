@@ -8,7 +8,9 @@ import { Certification } from './mentors/certification.entity';
 import { SocialLink } from './mentors/social_link.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, MentorDetail, Certification, SocialLink])],
+  imports: [
+    TypeOrmModule.forFeature([User, MentorDetail, Certification, SocialLink]),
+  ],
   providers: [UsersService],
   controllers: [UsersController],
   exports: [UsersService],

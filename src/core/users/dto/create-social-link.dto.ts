@@ -7,7 +7,11 @@ export class CreateSocialLinkDto {
   @IsNotEmpty()
   platform: string;
 
-  @ApiProperty({ description: 'URL to the social media profile', type: String, format: 'url' })
+  @ApiProperty({
+    description: 'URL to the social media profile',
+    type: String,
+    format: 'url',
+  })
   @IsString()
   @IsNotEmpty()
   @IsUrl()

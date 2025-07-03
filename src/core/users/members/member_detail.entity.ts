@@ -19,7 +19,7 @@ export class MemberDetail {
   id: number;
 
   @OneToOne(() => User, (user) => user.memberDetail, { onDelete: 'CASCADE' })
-  @JoinColumn()
+  @JoinColumn({ name: 'user_id' })
   user: User;
 
   @Column({ nullable: true })

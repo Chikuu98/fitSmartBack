@@ -7,7 +7,11 @@ export class UpdateSocialLinkDto {
   @IsString()
   platform?: string;
 
-  @ApiPropertyOptional({ description: 'URL to the social media profile', type: String, format: 'url' })
+  @ApiPropertyOptional({
+    description: 'URL to the social media profile',
+    type: String,
+    format: 'url',
+  })
   @IsOptional()
   @IsString()
   @IsUrl()

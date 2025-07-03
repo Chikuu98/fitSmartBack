@@ -10,6 +10,7 @@ import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 import { MentorTimeSlot } from '../mentorSlots/slots/mentor_time_slot.entity';
 import { User } from '@/core/users/user.entity';
+import { BookingPayment } from './booking_payments/booking_payment.entity';
 
 @Injectable()
 export class BookingService {
@@ -20,18 +21,19 @@ export class BookingService {
     private readonly slotRepo: Repository<MentorTimeSlot>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    @InjectRepository(BookingPayment)
+    private readonly bookingPaymentRepo: Repository<BookingPayment>,
   ) {}
 
-  async createBooking(dto: CreateBookingDto, userId: number) {
+  async createBooking(dto: CreateBookingDto, user_id: number) {
     const slot = await this.slotRepo.findOne({
       where: { id: dto.mentor_slot_id },
       relations: ['mentor'],
     });
-
     if (!slot) throw new NotFoundException('Mentor slot not found');
     if (slot.is_booked) throw new BadRequestException('Slot already booked');
 
-    const member = await this.userRepo.findOne({ where: { id: userId } });
+    const member = await this.userRepo.findOne({ where: { id: user_id } });
     if (!member) throw new NotFoundException('Member not found');
 
     const booking = this.bookingRepo.create({
@@ -39,13 +41,21 @@ export class BookingService {
       mentorSlot: slot,
       member,
       status: dto.status || BookingStatus.PENDING,
-      payment_status: dto.payment_status || PaymentStatus.UNPAID,
     });
 
     slot.is_booked = true;
     await this.slotRepo.save(slot);
-
     await this.bookingRepo.save(booking);
+
+    const unpaidPayment = new BookingPayment();
+    unpaidPayment.booking = booking;
+    unpaidPayment.amount = 1000;
+    unpaidPayment.status = PaymentStatus.UNPAID;
+    unpaidPayment.payment_method = '';
+    unpaidPayment.transaction_id = '';
+    unpaidPayment.currency = 'INR';
+    await this.bookingPaymentRepo.save(unpaidPayment);
+
     return {
       success: true,
       message: 'Booking created successfully',
@@ -66,7 +76,7 @@ export class BookingService {
 
   async findAll() {
     const bookings = await this.bookingRepo.find({
-      relations: ['mentorSlot', 'member'],
+      relations: ['mentorSlot', 'member', 'bookingPayment'],
     });
     return {
       success: true,
@@ -74,12 +84,12 @@ export class BookingService {
     };
   }
 
-  async findByMemberId(memberId: number) {
-    const member = await this.userRepo.findOne({ where: { id: memberId } });
+  async findByMemberId(member_id: number) {
+    const member = await this.userRepo.findOne({ where: { id: member_id } });
     if (!member) throw new NotFoundException('Member not found');
     const bookings = await this.bookingRepo.find({
       where: { member },
-      relations: ['mentorSlot.mentor', 'member'],
+      relations: ['mentorSlot.mentor', 'member', 'bookingPayment'],
     });
     return {
       success: true,
@@ -87,12 +97,12 @@ export class BookingService {
     };
   }
 
-  async findByMentorId(mentorId: number) {
-    const mentor = await this.userRepo.findOne({ where: { id: mentorId } });
+  async findByMentorId(mentor_id: number) {
+    const mentor = await this.userRepo.findOne({ where: { id: mentor_id } });
     if (!mentor) throw new NotFoundException('Mentor not found');
     const bookings = await this.bookingRepo.find({
       where: { mentorSlot: { mentor: mentor } },
-      relations: ['mentorSlot', 'member'],
+      relations: ['mentorSlot', 'member', 'bookingPayment'],
     });
     return {
       success: true,
@@ -103,7 +113,7 @@ export class BookingService {
   async findOne(id: number) {
     const booking = await this.bookingRepo.findOne({
       where: { id },
-      relations: ['mentorSlot', 'member'],
+      relations: ['mentorSlot', 'member', 'bookingPayment'],
     });
     if (!booking) throw new NotFoundException('Booking not found');
     return {
@@ -141,11 +151,33 @@ export class BookingService {
   async markAsPaid(id: number) {
     const bookingResult = await this.findOne(id);
     const booking = bookingResult.data;
-    booking.payment_status = PaymentStatus.PAID;
-    await this.bookingRepo.save(booking);
-    return {
-      success: true,
-      message: 'Payment marked as paid successfully',
-    };
+    const price = 1000;
+
+    const paidPayment = await this.bookingPaymentRepo.findOne({
+      where: { booking: { id: booking.id }, status: PaymentStatus.PAID },
+    });
+    if (paidPayment) {
+      return {
+        success: false,
+        message: 'Payment already exists for this booking',
+      };
+    }
+
+    const unpaidPayment = await this.bookingPaymentRepo.findOne({
+      where: { booking: { id: booking.id }, status: PaymentStatus.UNPAID },
+      order: { id: 'DESC' },
+    });
+    if (unpaidPayment) {
+      unpaidPayment.status = PaymentStatus.PAID;
+      unpaidPayment.amount = price;
+      unpaidPayment.paid_at = new Date();
+      unpaidPayment.payment_method = 'Stripe';
+      unpaidPayment.transaction_id = `txn_${Date.now()}`;
+      await this.bookingPaymentRepo.save(unpaidPayment);
+      return {
+        success: true,
+        message: 'Payment marked as paid successfully',
+      };
+    }
   }
 }

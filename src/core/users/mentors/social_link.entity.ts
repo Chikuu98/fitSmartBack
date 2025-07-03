@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { MentorDetail } from './mentor_detail.entity';
 
 @Entity('social_links')
@@ -12,6 +18,9 @@ export class SocialLink {
   @Column({ length: 255 })
   url: string;
 
-  @ManyToOne(() => MentorDetail, (mentor) => mentor.socialLink, { onDelete: 'CASCADE' })
+  @ManyToOne(() => MentorDetail, (mentor) => mentor.socialLink, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'mentor_detail_id' })
   mentorDetail: MentorDetail;
 }

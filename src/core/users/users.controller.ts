@@ -88,7 +88,7 @@ export class UsersController {
     summary: 'Update current user profile',
   })
   async updateMe(@Body() updateDto: UpdateUserDto, @Req() req: any) {
-    return this.usersService.updateUser(req.user.userId, updateDto, req.user);
+    return this.usersService.updateUser(req.user.user_id, updateDto, req.user);
   }
 
   @Put('/member/member-details')
@@ -101,7 +101,7 @@ export class UsersController {
     @Req() req: any,
   ) {
     return this.usersService.updateMemberDetails(
-      req.user.userId,
+      req.user.user_id,
       updateDto,
       req.user,
     );
@@ -117,7 +117,7 @@ export class UsersController {
     @Req() req: any,
   ) {
     return this.usersService.updateMentorDetails(
-      req.user.userId,
+      req.user.user_id,
       updateDto,
       req.user,
     );
@@ -127,7 +127,7 @@ export class UsersController {
   @Roles(UserRole.MENTOR)
   @ApiOperation({ summary: 'Add a certification to the current mentor' })
   async addCertification(@Body() dto: CreateCertificationDto, @Req() req: any) {
-    return this.usersService.addCertification(req.user.userId, dto);
+    return this.usersService.addCertification(req.user.user_id, dto);
   }
 
   @Put('/mentor/certifications/:id')
@@ -138,14 +138,14 @@ export class UsersController {
     @Body() dto: UpdateCertificationDto,
     @Req() req: any,
   ) {
-    return this.usersService.updateCertification(req.user.userId, id, dto);
+    return this.usersService.updateCertification(req.user.user_id, id, dto);
   }
 
   @Post('/mentor/social-links')
   @Roles(UserRole.MENTOR)
   @ApiOperation({ summary: 'Add a social link to the current mentor' })
   async addSocialLink(@Body() dto: CreateSocialLinkDto, @Req() req: any) {
-    return this.usersService.addSocialLink(req.user.userId, dto);
+    return this.usersService.addSocialLink(req.user.user_id, dto);
   }
 
   @Put('/mentor/social-links/:id')
@@ -156,6 +156,6 @@ export class UsersController {
     @Body() dto: UpdateSocialLinkDto,
     @Req() req: any,
   ) {
-    return this.usersService.updateSocialLink(req.user.userId, id, dto);
+    return this.usersService.updateSocialLink(req.user.user_id, id, dto);
   }
 }
