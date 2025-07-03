@@ -26,24 +26,6 @@ export class UpdateMentorDetailsDto {
 
   @IsOptional()
   @IsString()
-  @Length(1, 255)
-  @ApiPropertyOptional({ 
-    example: 'ACE, NASM, RD',
-    description: 'Mentor certifications'
-  })
-  certifications?: string;
-
-  @IsOptional()
-  @IsString()
-  @Length(1, 255)
-  @ApiPropertyOptional({ 
-    example: 'https://linkedin.com/in/drjohnsmith',
-    description: 'Mentor social media links'
-  })
-  social_links?: string;
-
-  @IsOptional()
-  @IsString()
   @Length(1, 20)
   @ApiPropertyOptional({ 
     example: '+1234567890',

@@ -33,18 +33,6 @@ export class CreateMentorDetailsTable1750588365727
             isNullable: true,
           },
           {
-            name: 'certifications',
-            type: 'varchar',
-            length: '255',
-            isNullable: true,
-          },
-          {
-            name: 'social_links',
-            type: 'varchar',
-            length: '255',
-            isNullable: true,
-          },
-          {
             name: 'contact_number',
             type: 'varchar',
             length: '20',
