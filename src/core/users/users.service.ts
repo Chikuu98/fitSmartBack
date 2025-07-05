@@ -341,7 +341,6 @@ export class UsersService {
         where: { user: { id: user_id } },
         relations: ['user'],
       });
-    console.log('mentorDetail', mentorDetail);
     if (!mentorDetail) throw new NotFoundException('Mentor details not found');
     const cert = this.dataSource
       .getRepository(Certification)
@@ -358,7 +357,7 @@ export class UsersService {
     const certRepo = this.dataSource.getRepository(Certification);
     const cert = await certRepo.findOne({
       where: { id },
-      relations: ['mentorDetail'],
+      relations: ['mentorDetail.user'],
     });
     if (!cert || cert.mentorDetail.user.id !== user_id)
       throw new NotFoundException('Certification not found or not yours');
@@ -390,7 +389,7 @@ export class UsersService {
     const linkRepo = this.dataSource.getRepository(SocialLink);
     const link = await linkRepo.findOne({
       where: { id },
-      relations: ['mentorDetail'],
+      relations: ['mentorDetail.user'],
     });
     if (!link || link.mentorDetail.user.id !== user_id)
       throw new NotFoundException('Social link not found or not yours');
