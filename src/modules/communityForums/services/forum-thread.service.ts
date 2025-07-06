@@ -73,6 +73,7 @@ export class ForumThreadService {
       .leftJoinAndSelect('thread.forumType', 'forumType')
       .leftJoinAndSelect('thread.tags', 'tags')
       .leftJoinAndSelect('thread.replies', 'replies')
+      .leftJoinAndSelect('replies.likes', 'replyLikes')
       .leftJoinAndSelect('thread.likes', 'likes')
       .orderBy('thread.created_at', 'DESC');
 
