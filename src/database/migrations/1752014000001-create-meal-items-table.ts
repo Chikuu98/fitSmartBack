@@ -1,11 +1,10 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
 
-export class CreateMealPlansTable1752014000000 implements MigrationInterface {
+export class CreateMealItemsTable1752014000001 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // Create meal_plans table
     await queryRunner.createTable(
       new Table({
-        name: 'meal_plans',
+        name: 'meal_items',
         columns: [
           {
             name: 'id',
@@ -15,62 +14,78 @@ export class CreateMealPlansTable1752014000000 implements MigrationInterface {
             generationStrategy: 'increment',
           },
           {
-            name: 'accepted_plan_id',
+            name: 'meal_plan_id',
             type: 'int'
           },
           {
-            name: 'day_number',
-            type: 'int',
-            comment: '1-7 for weekly plans, can extend for custom durations'
+            name: 'meal_type',
+            type: 'enum',
+            enum: ['breakfast', 'lunch', 'dinner', 'snack', 'pre_workout', 'post_workout'],
+            comment: 'Type of meal'
           },
           {
-            name: 'day_name',
+            name: 'meal_order',
+            type: 'int',
+            comment: 'Order within the meal type (for multiple snacks, etc.)'
+          },
+          {
+            name: 'name',
             type: 'varchar',
-            length: '20',
-            comment: 'Monday, Tuesday, etc.'
+            length: '200'
           },
           {
-            name: 'total_calories',
-            type: 'int',
-            comment: 'Total daily calories'
-          },
-          {
-            name: 'total_protein',
-            type: 'decimal',
-            precision: 6,
-            scale: 2,
-            isNullable: true,
-            comment: 'Total protein in grams'
-          },
-          {
-            name: 'total_carbs',
-            type: 'decimal',
-            precision: 6,
-            scale: 2,
-            isNullable: true,
-            comment: 'Total carbohydrates in grams'
-          },
-          {
-            name: 'total_fats',
-            type: 'decimal',
-            precision: 6,
-            scale: 2,
-            isNullable: true,
-            comment: 'Total fats in grams'
-          },
-          {
-            name: 'total_fiber',
-            type: 'decimal',
-            precision: 6,
-            scale: 2,
-            isNullable: true,
-            comment: 'Total fiber in grams'
-          },
-          {
-            name: 'notes',
+            name: 'description',
             type: 'text',
+            isNullable: true
+          },
+          {
+            name: 'ingredients',
+            type: 'json',
+            comment: 'Array of ingredients with quantities'
+          },
+          {
+            name: 'calories',
+            type: 'int'
+          },
+          {
+            name: 'protein',
+            type: 'decimal',
+            precision: 6,
+            scale: 2,
             isNullable: true,
-            comment: 'Daily meal plan notes'
+            comment: 'Protein in grams'
+          },
+          {
+            name: 'carbs',
+            type: 'decimal',
+            precision: 6,
+            scale: 2,
+            isNullable: true,
+            comment: 'Carbohydrates in grams'
+          },
+          {
+            name: 'fats',
+            type: 'decimal',
+            precision: 6,
+            scale: 2,
+            isNullable: true,
+            comment: 'Fats in grams'
+          },
+          {
+            name: 'fiber',
+            type: 'decimal',
+            precision: 6,
+            scale: 2,
+            isNullable: true,
+            comment: 'Fiber in grams'
+          },
+          {
+            name: 'sugar',
+            type: 'decimal',
+            precision: 6,
+            scale: 2,
+            isNullable: true,
+            comment: 'Sugar in grams'
           },
           {
             name: 'created_at',
@@ -80,16 +95,16 @@ export class CreateMealPlansTable1752014000000 implements MigrationInterface {
         ],
         foreignKeys: [
           {
-            columnNames: ['accepted_plan_id'],
-            referencedTableName: 'accepted_plans',
+            columnNames: ['meal_plan_id'],
+            referencedTableName: 'meal_plans',
             referencedColumnNames: ['id'],
             onDelete: 'CASCADE',
           }
         ],
         indices: [
           {
-            name: 'IDX_meal_plans_plan_day',
-            columnNames: ['accepted_plan_id', 'day_number']
+            name: 'IDX_meal_items_plan_type_order',
+            columnNames: ['meal_plan_id', 'meal_type', 'meal_order']
           }
         ]
       }),
@@ -98,6 +113,6 @@ export class CreateMealPlansTable1752014000000 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.dropTable('meal_plans');
+    await queryRunner.dropTable('meal_items');
   }
 }

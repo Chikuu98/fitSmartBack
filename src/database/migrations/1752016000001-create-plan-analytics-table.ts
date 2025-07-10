@@ -1,11 +1,10 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
 
-export class CreateMealPlansTable1752014000000 implements MigrationInterface {
+export class CreatePlanAnalyticsTable1752016000001 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // Create meal_plans table
     await queryRunner.createTable(
       new Table({
-        name: 'meal_plans',
+        name: 'plan_analytics',
         columns: [
           {
             name: 'id',
@@ -16,64 +15,67 @@ export class CreateMealPlansTable1752014000000 implements MigrationInterface {
           },
           {
             name: 'accepted_plan_id',
-            type: 'int'
-          },
-          {
-            name: 'day_number',
             type: 'int',
-            comment: '1-7 for weekly plans, can extend for custom durations'
+            isUnique: true
           },
           {
-            name: 'day_name',
-            type: 'varchar',
-            length: '20',
-            comment: 'Monday, Tuesday, etc.'
-          },
-          {
-            name: 'total_calories',
-            type: 'int',
-            comment: 'Total daily calories'
-          },
-          {
-            name: 'total_protein',
+            name: 'completion_rate',
             type: 'decimal',
-            precision: 6,
+            precision: 5,
+            scale: 2,
+            comment: 'Overall completion percentage'
+          },
+          {
+            name: 'workout_completion_rate',
+            type: 'decimal',
+            precision: 5,
+            scale: 2,
+            comment: 'Workout completion percentage'
+          },
+          {
+            name: 'meal_completion_rate',
+            type: 'decimal',
+            precision: 5,
+            scale: 2,
+            comment: 'Meal plan adherence percentage'
+          },
+          {
+            name: 'weight_change_kg',
+            type: 'decimal',
+            precision: 4,
             scale: 2,
             isNullable: true,
-            comment: 'Total protein in grams'
+            comment: 'Calculated weight change'
           },
           {
-            name: 'total_carbs',
+            name: 'consistency_score',
             type: 'decimal',
-            precision: 6,
+            precision: 4,
             scale: 2,
             isNullable: true,
-            comment: 'Total carbohydrates in grams'
+            comment: 'Consistency score based on daily logging'
           },
           {
-            name: 'total_fats',
+            name: 'engagement_score',
             type: 'decimal',
-            precision: 6,
+            precision: 4,
             scale: 2,
             isNullable: true,
-            comment: 'Total fats in grams'
+            comment: 'Engagement score based on detailed tracking'
           },
           {
-            name: 'total_fiber',
-            type: 'decimal',
-            precision: 6,
-            scale: 2,
-            isNullable: true,
-            comment: 'Total fiber in grams'
+            name: 'improvement_trend',
+            type: 'enum',
+            enum: ['declining', 'stable', 'improving', 'excellent'],
+            isNullable: true
           },
           {
-            name: 'notes',
-            type: 'text',
-            isNullable: true,
-            comment: 'Daily meal plan notes'
+            name: 'calculated_at',
+            type: 'timestamp',
+            default: 'CURRENT_TIMESTAMP',
           },
           {
-            name: 'created_at',
+            name: 'updated_at',
             type: 'timestamp',
             default: 'CURRENT_TIMESTAMP',
           }
@@ -85,12 +87,6 @@ export class CreateMealPlansTable1752014000000 implements MigrationInterface {
             referencedColumnNames: ['id'],
             onDelete: 'CASCADE',
           }
-        ],
-        indices: [
-          {
-            name: 'IDX_meal_plans_plan_day',
-            columnNames: ['accepted_plan_id', 'day_number']
-          }
         ]
       }),
       true,
@@ -98,6 +94,6 @@ export class CreateMealPlansTable1752014000000 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.dropTable('meal_plans');
+    await queryRunner.dropTable('plan_analytics');
   }
 }
