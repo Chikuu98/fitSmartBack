@@ -7,6 +7,7 @@ import { AuthModule } from './core/auth/auth.module';
 import { MentorSlotsModule } from './modules/mentorSlots/slots/mentor-slots.module';
 import { BookingModule } from './modules/bookings/booking.module';
 import { CommunityForumsModule } from './modules/communityForums/community-forums.module';
+import { PlansModule } from './modules/plans/plans.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -23,6 +24,7 @@ import { AppService } from './app.service';
     MentorSlotsModule,
     BookingModule,
     CommunityForumsModule,
+    PlansModule,
   ],
   controllers: [AppController],
   providers: [AppService],
