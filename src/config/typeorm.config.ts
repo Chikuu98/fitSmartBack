@@ -13,6 +13,19 @@ import { ForumThread } from '@/modules/communityForums/entities/forum-thread.ent
 import { ForumReply } from '@/modules/communityForums/entities/forum-reply.entity';
 import { ForumTag } from '@/modules/communityForums/entities/forum-tag.entity';
 import { ForumLike } from '@/modules/communityForums/entities/forum-like.entity';
+import { PlanType } from '@/modules/plans/entities/plan-type.entity';
+import { GeneratedPlan } from '@/modules/plans/entities/generated-plan.entity';
+import { AcceptedPlan } from '@/modules/plans/entities/accepted-plan.entity';
+import { WorkoutPlan } from '@/modules/plans/entities/workout-plan.entity';
+import { WorkoutExercise } from '@/modules/plans/entities/workout-exercise.entity';
+import { MealPlan } from '@/modules/plans/entities/meal-plan.entity';
+import { MealItem } from '@/modules/plans/entities/meal-item.entity';
+import { DailyProgress } from '@/modules/plans/entities/daily-progress.entity';
+import { WorkoutProgress } from '@/modules/plans/entities/workout-progress.entity';
+import { MealProgress } from '@/modules/plans/entities/meal-progress.entity';
+import { PlanFeedback } from '@/modules/plans/entities/plan-feedback.entity';
+import { PlanAnalytics } from '@/modules/plans/entities/plan-analytics.entity';
+import { UserPreferences } from '@/modules/plans/entities/user-preferences.entity';
 
 export const typeOrmConfig = (
   configService: ConfigService,
@@ -37,6 +50,19 @@ export const typeOrmConfig = (
     ForumReply,
     ForumTag,
     ForumLike,
+    PlanType,
+    GeneratedPlan,
+    AcceptedPlan,
+    WorkoutPlan,
+    WorkoutExercise,
+    MealPlan,
+    MealItem,
+    DailyProgress,
+    WorkoutProgress,
+    MealProgress,
+    PlanFeedback,
+    PlanAnalytics,
+    UserPreferences,
   ],
   synchronize: false,
 });
