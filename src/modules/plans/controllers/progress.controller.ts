@@ -122,11 +122,6 @@ export class ProgressController {
         dailyProgress: { id: 1 },
         mealItem: { id: 1 },
         status: 'fully_consumed',
-        portion_percentage: 100,
-        satisfaction_rating: 9,
-        taste_rating: 8,
-        hunger_before: 'moderately_hungry',
-        hunger_after: 'satisfied',
         notes: 'Delicious and filling',
         created_at: '2025-07-10T10:00:00Z'
       }

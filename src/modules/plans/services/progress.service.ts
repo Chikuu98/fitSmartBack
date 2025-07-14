@@ -145,12 +145,6 @@ export class ProgressService {
       dailyProgress: { id: dailyProgressId },
       mealItem: { id: dto.meal_item_id },
       status: dto.status,
-      portion_percentage: dto.portion_percentage,
-      satisfaction_rating: dto.satisfaction_rating,
-      taste_rating: dto.taste_rating,
-      hunger_before: dto.hunger_before,
-      hunger_after: dto.hunger_after,
-      substitutions: dto.substitutions,
       notes: dto.notes,
     });
 
