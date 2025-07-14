@@ -28,58 +28,10 @@ export class CreateMealProgressTable1752015000002 implements MigrationInterface 
             default: "'not_consumed'"
           },
           {
-            name: 'portion_percentage',
-            type: 'decimal',
-            precision: 5,
-            scale: 2,
-            default: 100,
-            comment: 'Percentage of planned portion consumed'
-          },
-          {
-            name: 'actual_calories',
-            type: 'int',
-            isNullable: true,
-            comment: 'Calculated based on portion_percentage'
-          },
-          {
-            name: 'satisfaction_rating',
-            type: 'int',
-            isNullable: true,
-            comment: 'User rating 1-10 for meal satisfaction'
-          },
-          {
-            name: 'taste_rating',
-            type: 'int',
-            isNullable: true,
-            comment: 'User rating 1-10 for taste'
-          },
-          {
-            name: 'hunger_before',
-            type: 'enum',
-            enum: ['not_hungry', 'slightly_hungry', 'moderately_hungry', 'very_hungry', 'extremely_hungry'],
-            isNullable: true
-          },
-          {
-            name: 'hunger_after',
-            type: 'enum',
-            enum: ['still_hungry', 'satisfied', 'comfortably_full', 'too_full', 'uncomfortably_full'],
-            isNullable: true
-          },
-          {
-            name: 'substitutions',
-            type: 'json',
-            isNullable: true,
-            comment: 'Any ingredient substitutions made'
-          },
-          {
             name: 'notes',
             type: 'text',
-            isNullable: true
-          },
-          {
-            name: 'consumed_at',
-            type: 'timestamp',
-            isNullable: true
+            isNullable: true,
+            comment: 'General notes about the meal consumption'
           },
           {
             name: 'created_at',

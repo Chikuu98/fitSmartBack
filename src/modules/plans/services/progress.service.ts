@@ -71,9 +71,6 @@ export class ProgressService {
       water_intake_liters: dto.water_intake_liters,
       stress_level: dto.stress_level,
       overall_satisfaction: dto.overall_satisfaction,
-      notes: dto.notes,
-      photos: dto.photos,
-      measurements: dto.measurements,
     });
 
     return this.dailyProgressRepository.save(progress);
@@ -110,13 +107,7 @@ export class ProgressService {
       dailyProgress: { id: dailyProgressId },
       workoutExercise: { id: dto.workout_exercise_id },
       status: dto.status,
-      actual_duration_minutes: dto.actual_duration_minutes,
-      actual_sets: dto.actual_sets,
-      actual_reps: dto.actual_reps,
       actual_weight: dto.actual_weight,
-      difficulty_rating: dto.difficulty_rating,
-      calories_burned: dto.calories_burned,
-      heart_rate_avg: dto.heart_rate_avg,
       notes: dto.notes,
     });
 
@@ -154,12 +145,6 @@ export class ProgressService {
       dailyProgress: { id: dailyProgressId },
       mealItem: { id: dto.meal_item_id },
       status: dto.status,
-      portion_percentage: dto.portion_percentage,
-      satisfaction_rating: dto.satisfaction_rating,
-      taste_rating: dto.taste_rating,
-      hunger_before: dto.hunger_before,
-      hunger_after: dto.hunger_after,
-      substitutions: dto.substitutions,
       notes: dto.notes,
     });
 

@@ -34,41 +34,11 @@ export class WorkoutProgress {
   @Column({ type: 'enum', enum: WorkoutStatus, default: WorkoutStatus.NOT_STARTED })
   status: WorkoutStatus;
 
-  @Column({ nullable: true })
-  actual_duration_minutes: number;
-
-  @Column({ nullable: true })
-  actual_sets: number;
-
-  @Column({ length: 100, nullable: true, comment: 'Actual reps performed per set' })
-  actual_reps: string;
-
-  @Column({ length: 50, nullable: true })
+  @Column({ length: 50, nullable: true, comment: 'Weight used for strength exercises' })
   actual_weight: string;
 
-  @Column({ nullable: true, comment: 'User rating 1-10 for exercise difficulty' })
-  difficulty_rating: number;
-
-  @Column({ nullable: true, comment: 'User rating 1-10 for exercise enjoyment' })
-  enjoyment_rating: number;
-
-  @Column({ nullable: true })
-  calories_burned: number;
-
-  @Column({ nullable: true })
-  heart_rate_avg: number;
-
-  @Column({ nullable: true })
-  heart_rate_max: number;
-
-  @Column('text', { nullable: true })
+  @Column('text', { nullable: true, comment: 'General notes about the exercise performance' })
   notes: string;
-
-  @Column({ nullable: true })
-  started_at: Date;
-
-  @Column({ nullable: true })
-  completed_at: Date;
 
   @CreateDateColumn()
   created_at: Date;

@@ -50,32 +50,8 @@ export class MealProgress {
   @Column({ type: 'enum', enum: MealStatus, default: MealStatus.NOT_CONSUMED })
   status: MealStatus;
 
-  @Column('decimal', { precision: 5, scale: 2, default: 100, comment: 'Percentage of planned portion consumed' })
-  portion_percentage: number;
-
-  @Column({ nullable: true, comment: 'Calculated based on portion_percentage' })
-  actual_calories: number;
-
-  @Column({ nullable: true, comment: 'User rating 1-10 for meal satisfaction' })
-  satisfaction_rating: number;
-
-  @Column({ nullable: true, comment: 'User rating 1-10 for taste' })
-  taste_rating: number;
-
-  @Column({ type: 'enum', enum: HungerLevel, nullable: true })
-  hunger_before: HungerLevel;
-
-  @Column({ type: 'enum', enum: FullnessLevel, nullable: true })
-  hunger_after: FullnessLevel;
-
-  @Column('json', { nullable: true, comment: 'Any ingredient substitutions made' })
-  substitutions: object[];
-
-  @Column('text', { nullable: true })
+  @Column('text', { nullable: true, comment: 'General notes about the meal consumption' })
   notes: string;
-
-  @Column({ nullable: true })
-  consumed_at: Date;
 
   @CreateDateColumn()
   created_at: Date;

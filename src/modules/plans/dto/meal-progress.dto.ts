@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsOptional, IsNumber, IsString, IsArray } from 'class-validator';
-import { MealStatus, HungerLevel, FullnessLevel } from '../entities/meal-progress.entity';
+import { IsEnum, IsOptional, IsNumber, IsString } from 'class-validator';
+import { MealStatus } from '../entities/meal-progress.entity';
 
 export class CreateMealProgressDto {
   @ApiProperty({ 
@@ -20,67 +20,7 @@ export class CreateMealProgressDto {
   status?: MealStatus = MealStatus.NOT_CONSUMED;
 
   @ApiProperty({ 
-    description: 'Percentage of planned portion consumed (0-100)',
-    example: 80,
-    minimum: 0,
-    maximum: 100,
-    default: 100
-  })
-  @IsOptional()
-  @IsNumber()
-  portion_percentage?: number = 100;
-
-  @ApiProperty({ 
-    description: 'Satisfaction rating (1-10)',
-    example: 8,
-    minimum: 1,
-    maximum: 10,
-    required: false
-  })
-  @IsOptional()
-  @IsNumber()
-  satisfaction_rating?: number;
-
-  @ApiProperty({ 
-    description: 'Taste rating (1-10)',
-    example: 9,
-    minimum: 1,
-    maximum: 10,
-    required: false
-  })
-  @IsOptional()
-  @IsNumber()
-  taste_rating?: number;
-
-  @ApiProperty({ 
-    description: 'Hunger level before eating',
-    enum: HungerLevel,
-    required: false
-  })
-  @IsOptional()
-  @IsEnum(HungerLevel)
-  hunger_before?: HungerLevel;
-
-  @ApiProperty({ 
-    description: 'Fullness level after eating',
-    enum: FullnessLevel,
-    required: false
-  })
-  @IsOptional()
-  @IsEnum(FullnessLevel)
-  hunger_after?: FullnessLevel;
-
-  @ApiProperty({ 
-    description: 'Ingredient substitutions made',
-    example: [{ original: 'chicken', substitute: 'tofu', reason: 'dietary preference' }],
-    required: false
-  })
-  @IsOptional()
-  @IsArray()
-  substitutions?: any[];
-
-  @ApiProperty({ 
-    description: 'Meal notes',
+    description: 'General notes about the meal consumption',
     example: 'Delicious and filling, will make again',
     required: false
   })
@@ -100,63 +40,7 @@ export class UpdateMealProgressDto {
   status?: MealStatus;
 
   @ApiProperty({ 
-    description: 'Percentage of planned portion consumed (0-100)',
-    minimum: 0,
-    maximum: 100,
-    required: false
-  })
-  @IsOptional()
-  @IsNumber()
-  portion_percentage?: number;
-
-  @ApiProperty({ 
-    description: 'Satisfaction rating (1-10)',
-    minimum: 1,
-    maximum: 10,
-    required: false
-  })
-  @IsOptional()
-  @IsNumber()
-  satisfaction_rating?: number;
-
-  @ApiProperty({ 
-    description: 'Taste rating (1-10)',
-    minimum: 1,
-    maximum: 10,
-    required: false
-  })
-  @IsOptional()
-  @IsNumber()
-  taste_rating?: number;
-
-  @ApiProperty({ 
-    description: 'Hunger level before eating',
-    enum: HungerLevel,
-    required: false
-  })
-  @IsOptional()
-  @IsEnum(HungerLevel)
-  hunger_before?: HungerLevel;
-
-  @ApiProperty({ 
-    description: 'Fullness level after eating',
-    enum: FullnessLevel,
-    required: false
-  })
-  @IsOptional()
-  @IsEnum(FullnessLevel)
-  hunger_after?: FullnessLevel;
-
-  @ApiProperty({ 
-    description: 'Ingredient substitutions made',
-    required: false
-  })
-  @IsOptional()
-  @IsArray()
-  substitutions?: any[];
-
-  @ApiProperty({ 
-    description: 'Meal notes',
+    description: 'General notes about the meal consumption',
     required: false
   })
   @IsOptional()
