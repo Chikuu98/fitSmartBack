@@ -28,68 +28,14 @@ export class CreateWorkoutProgressTable1752015000001 implements MigrationInterfa
             default: "'not_started'"
           },
           {
-            name: 'actual_duration_minutes',
-            type: 'int',
-            isNullable: true
-          },
-          {
-            name: 'actual_sets',
-            type: 'int',
-            isNullable: true
-          },
-          {
-            name: 'actual_reps',
-            type: 'varchar',
-            length: '100',
-            isNullable: true,
-            comment: 'Actual reps performed per set'
-          },
-          {
             name: 'actual_weight',
             type: 'varchar',
             length: '50',
             isNullable: true
           },
           {
-            name: 'difficulty_rating',
-            type: 'int',
-            isNullable: true,
-            comment: 'User rating 1-10 for exercise difficulty'
-          },
-          {
-            name: 'enjoyment_rating',
-            type: 'int',
-            isNullable: true,
-            comment: 'User rating 1-10 for exercise enjoyment'
-          },
-          {
-            name: 'calories_burned',
-            type: 'int',
-            isNullable: true
-          },
-          {
-            name: 'heart_rate_avg',
-            type: 'int',
-            isNullable: true
-          },
-          {
-            name: 'heart_rate_max',
-            type: 'int',
-            isNullable: true
-          },
-          {
             name: 'notes',
             type: 'text',
-            isNullable: true
-          },
-          {
-            name: 'started_at',
-            type: 'timestamp',
-            isNullable: true
-          },
-          {
-            name: 'completed_at',
-            type: 'timestamp',
             isNullable: true
           },
           {

@@ -89,12 +89,7 @@ export class ProgressController {
         dailyProgress: { id: 1 },
         workoutExercise: { id: 1 },
         status: 'completed',
-        actual_duration_minutes: 25,
-        actual_sets: 3,
-        actual_reps: '12,10,8',
         actual_weight: '15kg',
-        difficulty_rating: 7,
-        calories_burned: 150,
         notes: 'Great workout, felt strong',
         created_at: '2025-07-10T10:00:00Z'
       }
