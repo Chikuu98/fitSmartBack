@@ -27,6 +27,7 @@ import { MealProgress } from '@/modules/plans/entities/meal-progress.entity';
 import { PlanFeedback } from '@/modules/plans/entities/plan-feedback.entity';
 import { PlanAnalytics } from '@/modules/plans/entities/plan-analytics.entity';
 import { UserPreferences } from '@/modules/plans/entities/user-preferences.entity';
+import { Notification } from '@/modules/notifications/notification.entity';
 dotenv.config();
 
 export const AppDataSource = new DataSource({
@@ -63,6 +64,7 @@ export const AppDataSource = new DataSource({
     PlanFeedback,
     PlanAnalytics,
     UserPreferences,
+    Notification
   ],
   migrations: ['src/database/migrations/*.ts'],
   synchronize: false,
