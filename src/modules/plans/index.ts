@@ -26,10 +26,6 @@ export {
 export { 
   PlanFeedback, 
   GoalAchievement, 
-  ChangeLevel 
 } from './entities/plan-feedback.entity';
 export { PlanAnalytics, ImprovementTrend } from './entities/plan-analytics.entity';
 export { UserPreferences, DifficultyPreference } from './entities/user-preferences.entity';
-
-// Enhanced Member Details
-export { ActivityLevel } from '@/core/users/members/member_detail.entity';

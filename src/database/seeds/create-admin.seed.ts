@@ -1,5 +1,5 @@
 import { AppDataSource } from '@/config/data-source';
-import { Gender, User, UserRole } from '@/core/users/user.entity';
+import { Gender, User, UserAccountStatus, UserRole } from '@/core/users/user.entity';
 import * as bcrypt from 'bcrypt';
 
 async function seedAdmin() {
@@ -26,6 +26,7 @@ async function seedAdmin() {
     gender: Gender.MALE,
     country: 'Sri Lanka',
     language: 'Sinhala',
+    status: UserAccountStatus.ACTIVE,
     created_at: new Date(),
     updated_at: new Date(),
   });

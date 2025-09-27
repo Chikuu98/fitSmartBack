@@ -22,6 +22,13 @@ export enum UserRole {
   ADMIN = 'admin',
 }
 
+export enum UserAccountStatus {
+  ACTIVE = 'active',
+  SUSPENDED = 'suspended',
+  BANNED = 'banned',
+  PENDING_REVIEW = 'pending_review',
+}
+
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
@@ -48,6 +55,9 @@ export class User {
 
   @Column({ length: 100 })
   language: string;
+
+  @Column({ type: 'enum', enum: UserAccountStatus, default: UserAccountStatus.ACTIVE })
+  status: UserAccountStatus;
 
   @CreateDateColumn()
   created_at: Date;
