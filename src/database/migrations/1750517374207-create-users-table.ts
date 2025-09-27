@@ -34,6 +34,12 @@ export class CreateUsersTable1750517374207 implements MigrationInterface {
             length: '100',
           },
           {
+            name: 'status',
+            type: 'enum',
+            enum: ['active', 'suspended', 'banned', 'pending_review'],
+            default: "'active'",
+          },
+          {
             name: 'created_at',
             type: 'timestamp',
             default: 'CURRENT_TIMESTAMP',
