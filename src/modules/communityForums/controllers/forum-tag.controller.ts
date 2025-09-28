@@ -35,10 +35,15 @@ export class ForumTagController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all forum tags' })
-  @ApiResponse({ status: 200, description: 'List of all forum tags' })
-  async findAll() {
-    return await this.forumTagService.findAll();
+  @ApiOperation({ summary: 'Get all forum tags with pagination' })
+  @ApiQuery({ name: 'page', description: 'Page number', required: false, example: 1 })
+  @ApiQuery({ name: 'limit', description: 'Items per page', required: false, example: 10 })
+  @ApiResponse({ status: 200, description: 'List of all forum tags with pagination' })
+  async findAll(
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
+    return await this.forumTagService.findAll(page, limit);
   }
 
   @Get('search')
