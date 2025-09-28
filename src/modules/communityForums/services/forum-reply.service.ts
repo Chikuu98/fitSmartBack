@@ -52,9 +52,26 @@ export class ForumReplyService {
 
     const savedReply = await this.forumReplyRepo.save(reply);
     
+    // Fetch the complete reply with relations
+    const completeReply = await this.forumReplyRepo.findOne({
+      where: { id: savedReply.id },
+      relations: ['user', 'likes'],
+    });
+
+    if (!completeReply) {
+      throw new NotFoundException('Created reply not found');
+    }
+
+    // Add computed count fields
+    const replyWithCounts = {
+      ...completeReply,
+      likeCount: completeReply.likes ? completeReply.likes.length : 0,
+    };
+    
     return {
       success: true,
       message: 'Forum reply created successfully',
+      data: replyWithCounts,
     };
   }
 
@@ -68,10 +85,16 @@ export class ForumReplyService {
       take: limit,
     });
 
+    // Add computed count fields for each reply
+    const repliesWithCounts = data.map(reply => ({
+      ...reply,
+      likeCount: reply.likes ? reply.likes.length : 0,
+    }));
+
     return {
       success: true,
       data: {
-        data,
+        data: repliesWithCounts,
         total,
         page,
         limit,
@@ -98,9 +121,15 @@ export class ForumReplyService {
       throw new NotFoundException('Forum reply not found');
     }
 
+    // Add computed count fields
+    const replyWithCounts = {
+      ...reply,
+      likeCount: reply.likes ? reply.likes.length : 0,
+    };
+
     return {
       success: true,
-      data: reply,
+      data: replyWithCounts,
     };
   }
 
@@ -121,6 +150,10 @@ export class ForumReplyService {
         'children.user',
         'children.children',
         'children.children.user',
+        'children.likes',
+        'children.likes.user',
+        'children.children.likes',
+        'children.children.likes.user',
         'likes',
         'likes.user',
       ],
@@ -129,10 +162,26 @@ export class ForumReplyService {
       take: limit,
     });
 
+    // Recursively add computed count fields to all nested replies
+    const addCountsToReply = (reply: any): any => {
+      const replyWithCounts = {
+        ...reply,
+        likeCount: reply.likes ? reply.likes.length : 0,
+      };
+
+      if (reply.children && Array.isArray(reply.children)) {
+        replyWithCounts.children = reply.children.map(addCountsToReply);
+      }
+
+      return replyWithCounts;
+    };
+
+    const repliesWithCounts = data.map(addCountsToReply);
+
     return {
       success: true,
       data: {
-        data,
+        data: repliesWithCounts,
         total,
         page,
         limit,
@@ -151,10 +200,16 @@ export class ForumReplyService {
       take: limit,
     });
 
+    // Add computed count fields for each reply
+    const repliesWithCounts = data.map(reply => ({
+      ...reply,
+      likeCount: reply.likes ? reply.likes.length : 0,
+    }));
+
     return {
       success: true,
       data: {
-        data,
+        data: repliesWithCounts,
         total,
         page,
         limit,
@@ -174,11 +229,28 @@ export class ForumReplyService {
       content: dto.content ?? replyData.content,
     });
 
-    await this.forumReplyRepo.save(replyData);
+    const updatedReply = await this.forumReplyRepo.save(replyData);
+    
+    // Fetch the complete updated reply with relations
+    const completeReply = await this.forumReplyRepo.findOne({
+      where: { id: updatedReply.id },
+      relations: ['user', 'likes'],
+    });
+
+    if (!completeReply) {
+      throw new NotFoundException('Updated reply not found');
+    }
+
+    // Add computed count fields
+    const replyWithCounts = {
+      ...completeReply,
+      likeCount: completeReply.likes ? completeReply.likes.length : 0,
+    };
     
     return {
       success: true,
       message: 'Forum reply updated successfully',
+      data: replyWithCounts,
     };
   }
 
