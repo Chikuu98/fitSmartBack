@@ -37,15 +37,29 @@ export class ForumTagService {
     };
   }
 
-  async findAll(): Promise<any> {
-    const forumTags = await this.forumTagRepo.find({
+  async findAll(page: number = 1, limit: number = 10): Promise<any> {
+    const skip = (page - 1) * limit;
+
+    const [forumTags, total] = await this.forumTagRepo.findAndCount({
       relations: ['threads'],
       order: { name: 'ASC' },
+      skip: skip,
+      take: limit,
     });
+
+    const totalPages = Math.ceil(total / limit);
 
     return {
       success: true,
       data: forumTags,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
     };
   }
 
