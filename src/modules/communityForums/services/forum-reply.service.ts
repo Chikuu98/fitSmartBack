@@ -70,7 +70,7 @@ export class ForumReplyService {
     
     return {
       success: true,
-      message: 'Forum reply created successfully',
+      message: 'Forum reply added successfully',
       data: replyWithCounts,
     };
   }

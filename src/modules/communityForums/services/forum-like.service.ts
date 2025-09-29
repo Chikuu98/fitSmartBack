@@ -80,13 +80,13 @@ export class ForumLikeService {
     }
 
     // Get updated likes count
-    const likesCount = await this.getLikesCount(dto.thread_id, dto.reply_id);
+    const likeCount = await this.getLikesCount(dto.thread_id, dto.reply_id);
 
     return {
       success: true,
       data: {
-        action,
-        likesCount,
+        liked: action === 'liked',
+        likeCount,
       },
     };
   }

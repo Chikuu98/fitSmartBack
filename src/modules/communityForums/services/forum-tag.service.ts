@@ -37,16 +37,24 @@ export class ForumTagService {
     };
   }
 
-  async findAll(page: number = 1, limit: number = 10): Promise<any> {
+  async findAll(page: number = 1, limit: number = 10, search?: string): Promise<any> {
     const skip = (page - 1) * limit;
 
-    const [forumTags, total] = await this.forumTagRepo.findAndCount({
-      relations: ['threads'],
-      order: { name: 'ASC' },
-      skip: skip,
-      take: limit,
-    });
+    // Build query with optional search
+    const queryBuilder = this.forumTagRepo.createQueryBuilder('tag')
+      .leftJoinAndSelect('tag.threads', 'threads')
+      .orderBy('tag.name', 'ASC')
+      .skip(skip)
+      .take(limit);
 
+    // Add search condition if search term is provided
+    if (search && search.trim()) {
+      queryBuilder.where('LOWER(tag.name) LIKE LOWER(:search)', { 
+        search: `%${search.trim()}%` 
+      });
+    }
+
+    const [forumTags, total] = await queryBuilder.getManyAndCount();
     const totalPages = Math.ceil(total / limit);
 
     return {

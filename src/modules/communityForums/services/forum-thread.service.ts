@@ -81,7 +81,7 @@ export class ForumThreadService {
     };
   }
 
-  async findAll(page: number = 1, limit: number = 10, forumId?: number, tagId?: number): Promise<any> {
+  async findAll(page: number = 1, limit: number = 10, forumId?: number, tagId?: number, currentUserId?: number): Promise<any> {
     const queryBuilder = this.forumThreadRepo.createQueryBuilder('thread')
       .leftJoinAndSelect('thread.user', 'user')
       .leftJoinAndSelect('thread.forumType', 'forumType')
@@ -104,11 +104,13 @@ export class ForumThreadService {
 
     const [data, total] = await queryBuilder.getManyAndCount();
 
-    // Add computed fields for like count and reply count
+    // Add computed fields for like count, reply count and current user like status
     const threadsWithCounts = data.map(thread => ({
       ...thread,
       likeCount: thread.likes ? thread.likes.length : 0,
       replyCount: thread.replies ? thread.replies.length : 0,
+      isLikedByCurrentUser: currentUserId && thread.likes ? 
+        thread.likes.some(like => like.user_id === currentUserId) : false,
     }));
 
     return {
@@ -122,7 +124,7 @@ export class ForumThreadService {
     };
   }
 
-  async findOne(id: number): Promise<any> {
+  async findOne(id: number, currentUserId?: number): Promise<any> {
     const thread = await this.forumThreadRepo.findOne({
       where: { id },
       relations: [
@@ -142,11 +144,13 @@ export class ForumThreadService {
       throw new NotFoundException('Forum thread not found');
     }
 
-    // Add computed fields for like count and reply count
+    // Add computed fields for like count, reply count and current user like status
     const threadWithCounts = {
       ...thread,
       likeCount: thread.likes ? thread.likes.length : 0,
       replyCount: thread.replies ? thread.replies.length : 0,
+      isLikedByCurrentUser: currentUserId && thread.likes ? 
+        thread.likes.some(like => like.user_id === currentUserId) : false,
     };
 
     return {
@@ -155,7 +159,7 @@ export class ForumThreadService {
     };
   }
 
-  async findByUser(userId: number, page: number = 1, limit: number = 10): Promise<any> {
+  async findByUser(userId: number, page: number = 1, limit: number = 10, currentUserId?: number): Promise<any> {
     const skip = (page - 1) * limit;
 
     const [data, total] = await this.forumThreadRepo.findAndCount({
@@ -171,6 +175,8 @@ export class ForumThreadService {
       ...thread,
       likeCount: thread.likes ? thread.likes.length : 0,
       replyCount: thread.replies ? thread.replies.length : 0,
+      isLikedByCurrentUser: currentUserId && thread.likes ? 
+        thread.likes.some(like => like.user_id === currentUserId) : false,
     }));
 
     return {
@@ -235,13 +241,15 @@ export class ForumThreadService {
     };
   }
 
-  async search(query: string, page: number = 1, limit: number = 10): Promise<any> {
+  async search(query: string, page: number = 1, limit: number = 10, currentUserId?: number): Promise<any> {
     const skip = (page - 1) * limit;
 
     const queryBuilder = this.forumThreadRepo.createQueryBuilder('thread')
       .leftJoinAndSelect('thread.user', 'user')
       .leftJoinAndSelect('thread.forumType', 'forumType')
       .leftJoinAndSelect('thread.tags', 'tags')
+      .leftJoinAndSelect('thread.replies', 'replies')
+      .leftJoinAndSelect('thread.likes', 'likes')
       .where('thread.title ILIKE :query OR thread.content ILIKE :query', { query: `%${query}%` })
       .orderBy('thread.created_at', 'DESC')
       .skip(skip)
@@ -249,10 +257,19 @@ export class ForumThreadService {
 
     const [data, total] = await queryBuilder.getManyAndCount();
 
+    // Add computed fields for like count, reply count and current user like status
+    const threadsWithCounts = data.map(thread => ({
+      ...thread,
+      likeCount: thread.likes ? thread.likes.length : 0,
+      replyCount: thread.replies ? thread.replies.length : 0,
+      isLikedByCurrentUser: currentUserId && thread.likes ? 
+        thread.likes.some(like => like.user_id === currentUserId) : false,
+    }));
+
     return {
       success: true,
       data: {
-        data,
+        data: threadsWithCounts,
         total,
         page,
         limit,

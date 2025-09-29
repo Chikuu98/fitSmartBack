@@ -35,15 +35,17 @@ export class ForumTagController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all forum tags with pagination' })
+  @ApiOperation({ summary: 'Get all forum tags with pagination and optional search' })
   @ApiQuery({ name: 'page', description: 'Page number', required: false, example: 1 })
   @ApiQuery({ name: 'limit', description: 'Items per page', required: false, example: 10 })
+  @ApiQuery({ name: 'search', description: 'Search term to filter tags by name', required: false })
   @ApiResponse({ status: 200, description: 'List of all forum tags with pagination' })
   async findAll(
     @Query('page') page?: number,
     @Query('limit') limit?: number,
+    @Query('search') search?: string,
   ) {
-    return await this.forumTagService.findAll(page, limit);
+    return await this.forumTagService.findAll(page, limit, search);
   }
 
   @Get('search')

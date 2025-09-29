@@ -29,7 +29,7 @@ export class ForumReplyController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new forum reply' })
-  @ApiResponse({ status: 201, description: 'Forum reply created successfully' })
+  @ApiResponse({ status: 201, description: 'Forum reply added successfully' })
   @Roles(UserRole.MEMBER, UserRole.MENTOR, UserRole.ADMIN)
   async create(@Body() createDto: CreateForumReplyDto, @Req() req: any) {
     return await this.forumReplyService.create(createDto, req.user.user_id);

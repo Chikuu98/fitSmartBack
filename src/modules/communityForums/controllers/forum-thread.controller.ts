@@ -43,6 +43,7 @@ export class ForumThreadController {
   @ApiQuery({ name: 'tagId', required: false, description: 'Filter by tag ID' })
   @ApiResponse({ status: 200, description: 'List of forum threads' })
   async findAll(
+    @Req() req: any,
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
     @Query('forumId') forumId?: string,
@@ -53,7 +54,7 @@ export class ForumThreadController {
     const forumIdNum = forumId ? parseInt(forumId, 10) : undefined;
     const tagIdNum = tagId ? parseInt(tagId, 10) : undefined;
 
-    return await this.forumThreadService.findAll(pageNum, limitNum, forumIdNum, tagIdNum);
+    return await this.forumThreadService.findAll(pageNum, limitNum, forumIdNum, tagIdNum, req.user.user_id);
   }
 
   @Get('search')
@@ -66,11 +67,12 @@ export class ForumThreadController {
     @Query('q') query: string,
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
+    @Req() req: any,
   ) {
     const pageNum = parseInt(page, 10);
     const limitNum = parseInt(limit, 10);
 
-    return await this.forumThreadService.search(query, pageNum, limitNum);
+    return await this.forumThreadService.search(query, pageNum, limitNum, req.user.user_id);
   }
 
   @Get('user/:userId')
@@ -83,11 +85,12 @@ export class ForumThreadController {
     @Param('userId', ParseIntPipe) userId: number,
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
+    @Req() req: any,
   ) {
     const pageNum = parseInt(page, 10);
     const limitNum = parseInt(limit, 10);
 
-    return await this.forumThreadService.findByUser(userId, pageNum, limitNum);
+    return await this.forumThreadService.findByUser(userId, pageNum, limitNum, req.user.user_id);
   }
 
   @Get('my-threads')
@@ -104,15 +107,15 @@ export class ForumThreadController {
     const pageNum = parseInt(page, 10);
     const limitNum = parseInt(limit, 10);
 
-    return await this.forumThreadService.findByUser(req.user.user_id, pageNum, limitNum);
+    return await this.forumThreadService.findByUser(req.user.user_id, pageNum, limitNum, req.user.user_id);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get forum thread by ID' })
   @ApiResponse({ status: 200, description: 'Forum thread details' })
   @ApiResponse({ status: 404, description: 'Forum thread not found' })
-  async findOne(@Param('id', ParseIntPipe) id: number) {
-    return await this.forumThreadService.findOne(id);
+  async findOne(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
+    return await this.forumThreadService.findOne(id, req.user.user_id);
   }
 
   @Patch(':id')
