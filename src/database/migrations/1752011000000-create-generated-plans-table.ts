@@ -35,13 +35,14 @@ export class CreateGeneratedPlansTable1752011000000 implements MigrationInterfac
           {
             name: 'ai_response',
             type: 'json',
-            comment: 'Raw response from OpenAI API'
+            isNullable: true,
+            comment: 'Raw response from Gemini/OpenAI API'
           },
           {
             name: 'generation_model',
             type: 'varchar',
             length: '50',
-            default: "'gpt-4'",
+            isNullable: true,
             comment: 'AI model used for generation'
           },
           {
