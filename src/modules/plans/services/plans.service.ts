@@ -11,7 +11,7 @@ import { WorkoutExercise } from '../entities/workout-exercise.entity';
 import { MealPlan } from '../entities/meal-plan.entity';
 import { MealItem } from '../entities/meal-item.entity';
 import { UserPreferences } from '../entities/user-preferences.entity';
-import { OpenAIService } from './openai.service';
+import { GeminiService } from './gemini.service';
 import { GeneratePlanDto, PlanGenerationPromptDto } from '../dto/generate-plan.dto';
 import { AcceptPlanDto, PlanResponseDto } from '../dto/accept-plan.dto';
 import { UserPreferencesService } from './user-preferences.service';
@@ -39,23 +39,34 @@ export class PlansService {
     private mealPlanRepository: Repository<MealPlan>,
     @InjectRepository(MealItem)
     private mealItemRepository: Repository<MealItem>,
-    private openAIService: OpenAIService,
+    private geminiService: GeminiService,
     private userPreferencesService: UserPreferencesService,
   ) {}
 
   async generatePlan(userId: number, generatePlanDto: GeneratePlanDto): Promise<PlanResponseDto> {
     try {
-      // Get user and member details
-      const user = await this.userRepository.findOne({
-        where: { id: userId },
-        relations: ['memberDetail']
-      });
+      this.logger.log(`Generating plan for user ID: ${userId}`);
+      
+      const user = await this.userRepository
+        .createQueryBuilder('user')
+        .leftJoinAndSelect('user.memberDetail', 'memberDetail')
+        .where('user.id = :userId', { userId })
+        .getOne();
 
-      if (!user || !user.memberDetail) {
-        throw new NotFoundException('User or member details not found');
+      this.logger.log(`User found: ${!!user}, MemberDetail found: ${!!user?.memberDetail}`);
+      
+      if (!user) {
+        throw new NotFoundException(`User with ID ${userId} not found`);
       }
 
-      // Get plan type (assuming combined plan)
+      if (!user.memberDetail) {
+        this.logger.warn(`User ${userId} found but no memberDetail. User role: ${user.role}`);
+        throw new NotFoundException(
+          `Member details not found for user ID ${userId}. ` +
+          `User role: ${user.role}. Only members can generate fitness plans.`
+        );
+      }
+
       const planType = await this.planTypeRepository.findOne({
         where: { name: 'combined' }
       });
@@ -79,8 +90,8 @@ export class PlansService {
       await this.generatedPlanRepository.save(generatedPlan);
 
       try {
-        // Generate plan with OpenAI
-        const { response, model } = await this.openAIService.generatePlan(promptData);
+        // Generate plan with Gemini AI
+        const { response, model } = await this.geminiService.generatePlan(promptData);
 
         // Update plan with response
         generatedPlan.ai_response = response;
@@ -555,24 +566,25 @@ export class PlansService {
         acceptedPlan,
         day_number: i + 1,
         day_name: dayData.day,
-        total_calories: 0, // Will be updated after processing meals
+        total_calories: 0,
         notes: dayData.notes,
       });
 
       const savedMealPlan = await this.mealPlanRepository.save(mealPlan);
 
-      // Store meals
       const mealTypes = ['breakfast', 'lunch', 'dinner', 'snacks'];
       for (const mealType of mealTypes) {
         if (meals[mealType]) {
           const mealData = Array.isArray(meals[mealType]) ? meals[mealType] : [meals[mealType]];
+          
+          const enumMealType = mealType === 'snacks' ? 'snack' : mealType;
           
           for (let j = 0; j < mealData.length; j++) {
             const meal = mealData[j];
             
             const mealItem = this.mealItemRepository.create({
               mealPlan: savedMealPlan,
-              meal_type: mealType as any,
+              meal_type: enumMealType as any,
               meal_order: j + 1,
               name: meal.name,
               ingredients: meal.ingredients || [],

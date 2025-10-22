@@ -23,7 +23,7 @@ import { AnalyticsController } from './controllers/analytics.controller';
 
 // Services
 import { PlansService } from './services/plans.service';
-import { OpenAIService } from './services/openai.service';
+import { GeminiService } from './services/gemini.service';
 
 import { AnalyticsService } from './services/analytics.service';
 
@@ -65,7 +65,7 @@ import { UserPreferencesService } from './services/user-preferences.service';
   ],
   providers: [
     PlansService,
-    OpenAIService,
+    GeminiService,
     ProgressService,
     FeedbackService,
     AnalyticsService,

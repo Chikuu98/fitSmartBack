@@ -40,10 +40,10 @@ export class GeneratedPlan {
   @Column('json', { comment: 'User profile data sent to OpenAI' })
   prompt_data: object;
 
-  @Column('json', { comment: 'Raw response from OpenAI API' })
+  @Column('json', { nullable: true, comment: 'Raw response from Gemini/OpenAI API' })
   ai_response: object;
 
-  @Column({ length: 50, default: 'gpt-4', comment: 'AI model used for generation' })
+  @Column({ length: 50, nullable: true, comment: 'AI model used for generation' })
   generation_model: string;
 
   @Column({ type: 'enum', enum: GenerationStatus, default: GenerationStatus.COMPLETED })
