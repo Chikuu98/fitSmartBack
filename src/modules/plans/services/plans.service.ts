@@ -75,10 +75,8 @@ export class PlansService {
         throw new NotFoundException('Plan type not found');
       }
 
-      // Build prompt data
       const promptData = await this.buildPromptData(user, generatePlanDto);
 
-      // Create generated plan record
       const generatedPlan = this.generatedPlanRepository.create({
         user,
         planType,
@@ -90,10 +88,8 @@ export class PlansService {
       await this.generatedPlanRepository.save(generatedPlan);
 
       try {
-        // Generate plan with Gemini AI
         const { response, model } = await this.geminiService.generatePlan(promptData);
 
-        // Update plan with response
         generatedPlan.ai_response = response;
         generatedPlan.generation_model = model;
         generatedPlan.status = GenerationStatus.COMPLETED;
@@ -110,7 +106,6 @@ export class PlansService {
           is_accepted: false,
         };
       } catch (error) {
-        // Update plan with error
         generatedPlan.status = GenerationStatus.FAILED;
         generatedPlan.error_message = error.message;
         await this.generatedPlanRepository.save(generatedPlan);
@@ -136,7 +131,6 @@ export class PlansService {
       throw new BadRequestException('Plan is not ready to be accepted');
     }
 
-    // Check if plan is already accepted
     const existingAcceptedPlan = await this.acceptedPlanRepository.findOne({
       where: { generatedPlan: { id: planId } }
     });
@@ -145,18 +139,15 @@ export class PlansService {
       throw new BadRequestException('Plan is already accepted');
     }
 
-    // Get user's previous plan for progression tracking
     const previousPlan = await this.acceptedPlanRepository.findOne({
       where: { user: { id: userId }, status: AcceptedPlanStatus.COMPLETED },
       order: { completed_at: 'DESC' }
     });
 
-    // Calculate end date
     const startDate = new Date(acceptPlanDto.start_date);
     const endDate = new Date(startDate);
     endDate.setDate(endDate.getDate() + generatedPlan.duration_days - 1);
 
-    // Create accepted plan
     const acceptedPlan = this.acceptedPlanRepository.create({
       user: generatedPlan.user,
       generatedPlan,
@@ -172,7 +163,6 @@ export class PlansService {
 
     const savedAcceptedPlan = await this.acceptedPlanRepository.save(acceptedPlan);
 
-    // Parse and store workout and meal plans
     await this.parseAndStorePlans(savedAcceptedPlan, generatedPlan.ai_response);
 
     return {
@@ -227,14 +217,12 @@ export class PlansService {
       throw new NotFoundException('Plan not found');
     }
 
-    // Get workout plans with exercises
     const workoutPlans = await this.workoutPlanRepository.find({
       where: { acceptedPlan: { id: planId } },
       relations: ['exercises'],
       order: { day_number: 'ASC' }
     });
 
-    // Get meal plans with meals
     const mealPlans = await this.mealPlanRepository.find({
       where: { acceptedPlan: { id: planId } },
       relations: ['meals'],
@@ -255,9 +243,6 @@ export class PlansService {
     };
   }
 
-  /**
-   * Get generated plans for a user
-   */
   async getGeneratedPlans(userId: number, limit: number = 10, offset: number = 0): Promise<any> {
     const [plans, total] = await this.generatedPlanRepository.findAndCount({
       where: { user: { id: userId } },
@@ -282,9 +267,6 @@ export class PlansService {
     };
   }
 
-  /**
-   * Get accepted plans for a user
-   */
   async getAcceptedPlans(userId: number, status?: string): Promise<any[]> {
     const queryBuilder = this.acceptedPlanRepository
       .createQueryBuilder('plan')
@@ -315,9 +297,6 @@ export class PlansService {
     }));
   }
 
-  /**
-   * Get a specific generated plan
-   */
   async getGeneratedPlan(userId: number, planId: number): Promise<any> {
     const plan = await this.generatedPlanRepository.findOne({
       where: { id: planId, user: { id: userId } },
@@ -341,9 +320,6 @@ export class PlansService {
     };
   }
 
-  /**
-   * Get a specific accepted plan
-   */
   async getAcceptedPlan(userId: number, planId: number): Promise<any> {
     const plan = await this.acceptedPlanRepository.findOne({
       where: { id: planId, user: { id: userId } },
@@ -354,14 +330,12 @@ export class PlansService {
       throw new NotFoundException('Accepted plan not found');
     }
 
-    // Get workout plans with exercises
     const workoutPlans = await this.workoutPlanRepository.find({
       where: { acceptedPlan: { id: planId } },
       relations: ['exercises'],
       order: { day_number: 'ASC' },
     });
 
-    // Get meal plans with meals
     const mealPlans = await this.mealPlanRepository.find({
       where: { acceptedPlan: { id: planId } },
       relations: ['meals'],
@@ -391,9 +365,6 @@ export class PlansService {
     };
   }
 
-  /**
-   * Delete a generated plan
-   */
   async deleteGeneratedPlan(userId: number, planId: number): Promise<void> {
     const plan = await this.generatedPlanRepository.findOne({
       where: { id: planId, user: { id: userId } },
@@ -411,9 +382,6 @@ export class PlansService {
     await this.generatedPlanRepository.remove(plan);
   }
 
-  /**
-   * Cancel an accepted plan
-   */
   async cancelAcceptedPlan(userId: number, planId: number): Promise<void> {
     const plan = await this.acceptedPlanRepository.findOne({
       where: { id: planId, user: { id: userId } },
@@ -424,14 +392,10 @@ export class PlansService {
     }
 
     plan.status = AcceptedPlanStatus.CANCELLED;
-    // Note: Add cancelled_at field to entity if needed
 
     await this.acceptedPlanRepository.save(plan);
   }
 
-  /**
-   * Get all available plan types
-   */
   async getPlanTypes(): Promise<any[]> {
     const planTypes = await this.planTypeRepository.find({
       order: { name: 'ASC' },
@@ -441,8 +405,8 @@ export class PlansService {
       id: type.id,
       name: type.name,
       description: type.description,
-      typical_duration_weeks: 4, // Default value
-      difficulty_level: 'beginner', // Default value
+      typical_duration_weeks: 4,
+      difficulty_level: 'beginner',
     }));
   }
 
@@ -461,9 +425,7 @@ export class PlansService {
       target_weight: generatePlanDto.target_weight,
     };
 
-    // Add historical data if requested
     if (generatePlanDto.include_history) {
-      // Get previous plan performance
       const previousPlan = await this.acceptedPlanRepository.findOne({
         where: { user: { id: user.id }, status: AcceptedPlanStatus.COMPLETED },
         relations: ['feedback', 'analytics'],
@@ -480,7 +442,6 @@ export class PlansService {
         };
       }
 
-      // Get user preferences
       const userPreferences = await this.userPreferencesService.getUserPreferences(user.id);
       if (userPreferences) {
         promptData.user_preferences = {
@@ -526,7 +487,6 @@ export class PlansService {
 
       const savedWorkoutPlan = await this.workoutPlanRepository.save(workoutPlan);
 
-      // Store exercises
       if (dayData.workouts) {
         for (let j = 0; j < dayData.workouts.length; j++) {
           const exerciseData = dayData.workouts[j];
@@ -554,7 +514,6 @@ export class PlansService {
     for (let i = 0; i < mealPlanData.length; i++) {
       const dayData = mealPlanData[i];
       
-      // Calculate totals
       const meals = dayData.meals || {};
       let totalCalories = 0;
       let totalProtein = 0;
@@ -597,7 +556,6 @@ export class PlansService {
 
             await this.mealItemRepository.save(mealItem);
 
-            // Add to totals
             totalCalories += meal.calories || 0;
             totalProtein += meal.protein || 0;
             totalCarbs += meal.carbs || 0;
@@ -607,7 +565,6 @@ export class PlansService {
         }
       }
 
-      // Update meal plan totals
       savedMealPlan.total_calories = totalCalories;
       savedMealPlan.total_protein = totalProtein;
       savedMealPlan.total_carbs = totalCarbs;
