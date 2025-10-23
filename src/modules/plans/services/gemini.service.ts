@@ -24,7 +24,7 @@ export class GeminiService {
       model: 'gemini-2.0-flash-exp',
       generationConfig: {
         temperature: 0.7,
-        maxOutputTokens: 8000,
+        maxOutputTokens: 16000,
         responseMimeType: 'application/json',
         responseSchema: FitnessPlanSchema,
       },
@@ -36,18 +36,42 @@ export class GeminiService {
     model: string;
   }> {
     try {
-      const prompt = this.buildPrompt(promptData);
+      const requestedDays = promptData.duration_days;
+      const generateDays = requestedDays > 7 ? 7 : requestedDays;
+      
+      const modifiedPromptData = { ...promptData, duration_days: generateDays };
+      const prompt = this.buildPrompt(modifiedPromptData);
 
-      this.logger.log('Generating fitness plan with Gemini 2.0 Flash...');
+      this.logger.log(`Generating ${generateDays}-day fitness plan with Gemini 2.0 Flash (requested: ${requestedDays} days)...`);
 
       const result = await this.model.generateContent(prompt);
       const response = result.response;
       const text = response.text();
 
-      const parsedResponse: FitnessPlanResponse = JSON.parse(text);
+      this.logger.log(`Received response with ${text.length} characters`);
+
+      // Check if response is empty or incomplete
+      if (!text || text.trim().length === 0) {
+        throw new Error('Empty response from Gemini API');
+      }
+
+      let parsedResponse: FitnessPlanResponse;
+      
+      try {
+        parsedResponse = JSON.parse(text);
+      } catch (parseError) {
+        this.logger.error('Failed to parse JSON response:', text.substring(0, 500));
+        throw new Error('Invalid JSON response from Gemini API. The response may be incomplete.');
+      }
 
       if (!parsedResponse.workout_plan || !parsedResponse.meal_plan) {
+        this.logger.error('Invalid response structure:', parsedResponse);
         throw new Error('Invalid response structure from Gemini API');
+      }
+
+      if (requestedDays > generateDays) {
+        parsedResponse = this.repeatPlan(parsedResponse, requestedDays);
+        this.logger.log(`Extended ${generateDays}-day plan to ${requestedDays} days by repeating`);
       }
 
       this.logger.log(
@@ -69,60 +93,79 @@ export class GeminiService {
     }
   }
 
+  private repeatPlan(
+    basePlan: FitnessPlanResponse,
+    targetDays: number,
+  ): FitnessPlanResponse {
+    const baseDays = basePlan.workout_plan.length;
+    const workoutPlan = [...basePlan.workout_plan];
+    const mealPlan = [...basePlan.meal_plan];
+
+    let currentDay = baseDays + 1;
+    
+    while (workoutPlan.length < targetDays) {
+      const cycleIndex = (workoutPlan.length) % baseDays;
+      
+      const originalWorkout = basePlan.workout_plan[cycleIndex];
+      const newWorkout = {
+        ...originalWorkout,
+        day: `Day ${currentDay}`,
+      };
+      workoutPlan.push(newWorkout);
+
+      const originalMeal = basePlan.meal_plan[cycleIndex];
+      const newMeal = {
+        ...originalMeal,
+        day: `Day ${currentDay}`,
+      };
+      mealPlan.push(newMeal);
+
+      currentDay++;
+    }
+
+    return {
+      workout_plan: workoutPlan,
+      meal_plan: mealPlan,
+    };
+  }
+
 
   private buildPrompt(data: PlanGenerationPromptDto): string {
-    let prompt = `You are a certified fitness and nutrition expert with extensive experience in personalized training and meal planning.
+    let prompt = `You are a certified fitness and nutrition expert. Generate a ${data.duration_days}-day workout and meal plan.
 
-    Generate a comprehensive ${data.duration_days}-day workout and meal plan based on the following user profile:
+USER PROFILE:
+- Goal: ${data.goal}${data.target_weight ? ` (Target: ${data.target_weight}kg)` : ''}
+- Age: ${data.age}, Gender: ${data.gender}, Height: ${data.height}cm, Weight: ${data.weight}kg
+- Fitness Level: ${data.fitness_level}
+- Diet: ${data.dietary_preference}`;
 
-    USER PROFILE:
-    - Goal: ${data.goal}${data.target_weight ? ` (Target weight: ${data.target_weight}kg)` : ''}
-    - Physical Stats: ${data.age} years old, ${data.gender}, ${data.height}cm tall, ${data.weight}kg current weight
-    - Fitness Level: ${data.fitness_level}
-    - Dietary Preference: ${data.dietary_preference}`;
+    // Add previous plan performance if available
+    if (data.previous_plan_performance) {
+      prompt += `\n\nPREVIOUS PERFORMANCE:
+- Completion: ${data.previous_plan_performance.completion_rate || 'N/A'}%
+- Favorites: ${data.previous_plan_performance.favorite_workouts || 'N/A'}
+- Dislikes: ${data.previous_plan_performance.disliked_elements || 'N/A'}
+- Weight Change: ${data.previous_plan_performance.weight_change || 'N/A'}kg
 
-        // Add previous plan performance if available
-        if (data.previous_plan_performance) {
-          prompt += `\n\nPREVIOUS PLAN PERFORMANCE ANALYSIS:
-    - Completion Rate: ${data.previous_plan_performance.completion_rate || 'N/A'}%
-    - Favorite Workouts: ${data.previous_plan_performance.favorite_workouts || 'N/A'}
-    - Disliked Elements: ${data.previous_plan_performance.disliked_elements || 'N/A'}
-    - Challenges Faced: ${data.previous_plan_performance.challenges || 'N/A'}
-    - Weight Change: ${data.previous_plan_performance.weight_change || 'N/A'}kg
+Adjust based on this feedback.`;
+    }
 
-    Please adjust the new plan based on this feedback to improve adherence and results.`;
-        }
+    // Add learned preferences if available
+    if (data.user_preferences) {
+      prompt += `\n\nPREFERENCES:
+- Duration: ${data.user_preferences.optimal_workout_duration || 'N/A'} min
+- Types: ${data.user_preferences.preferred_workout_types || 'N/A'}
+- Difficulty: ${data.user_preferences.difficulty_preference || 'N/A'}`;
+    }
 
-        // Add learned preferences if available
-        if (data.user_preferences) {
-          prompt += `\n\nLEARNED USER PREFERENCES:
-    - Optimal Workout Duration: ${data.user_preferences.optimal_workout_duration || 'N/A'} minutes
-    - Preferred Workout Types: ${data.user_preferences.preferred_workout_types || 'N/A'}
-    - Difficulty Preference: ${data.user_preferences.difficulty_preference || 'N/A'}
+    const targetCalories = this.calculateTargetCalories(data);
 
-    Incorporate these preferences to maximize engagement and success.`;
-        }
-
-        const targetCalories = this.calculateTargetCalories(data);
-
-        prompt += `\n\nPLAN REQUIREMENTS:
-
-    WORKOUT PLAN (${data.duration_days} days):
-    - Progressive difficulty appropriate for ${data.fitness_level} level
-    - Variety of exercises targeting all major muscle groups
-    - Include cardio, strength, and flexibility work
-    - Realistic time commitments and recovery periods
-    - Calorie burn estimates based on user's weight and intensity
-
-    MEAL PLAN (${data.duration_days} days):
-    - Target daily calories: approximately ${targetCalories} kcal
-    - Aligned with ${data.goal.toLowerCase()} goal
-    - Respects ${data.dietary_preference} dietary preferences
-    - Balanced macronutrients (protein, carbs, fats, fiber)
-    - Practical ingredients and preparation methods
-    - Include breakfast, lunch, dinner, and healthy snacks
-
-    IMPORTANT: Focus on creating sustainable, enjoyable plans that the user can stick to long-term. Consider their feedback from previous plans and adjust accordingly.`;
+    prompt += `\n\nREQUIREMENTS:
+- ${data.duration_days} days of workouts (variety, progressive difficulty, all muscle groups)
+- ${data.duration_days} days of meals (${targetCalories} kcal/day, respects ${data.dietary_preference})
+- Keep descriptions concise
+- Include essential nutritional info (calories, protein, carbs, fats)
+- Practical exercises and meals`;
 
     return prompt;
   }
