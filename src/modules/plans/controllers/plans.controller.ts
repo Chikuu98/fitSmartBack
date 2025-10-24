@@ -55,7 +55,12 @@ export class PlansController {
   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Invalid input data' })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Authentication required' })
   async generatePlan(@Request() req, @Body() generatePlanDto: GeneratePlanDto) {
-    return this.plansService.generatePlan(req.user.id, generatePlanDto);
+    const plan = await this.plansService.generatePlan(req.user.id, generatePlanDto);
+    return {
+      success: true,
+      message: 'Plan generated successfully',
+      data: plan,
+    };
   }
 
   @Post(':planId/accept')
@@ -87,7 +92,12 @@ export class PlansController {
     @Param('planId', ParseIntPipe) planId: number,
     @Body() acceptPlanDto: AcceptPlanDto,
   ) {
-    return this.plansService.acceptPlan(req.user.id, planId, acceptPlanDto);
+    const acceptedPlan = await this.plansService.acceptPlan(req.user.id, planId, acceptPlanDto);
+    return {
+      success: true,
+      message: 'Plan accepted successfully',
+      data: acceptedPlan,
+    };
   }
 
   @Get('generated')
@@ -247,7 +257,10 @@ export class PlansController {
     @Param('id', ParseIntPipe) id: number,
   ) {
     await this.plansService.deleteGeneratedPlan(req.user.id, id);
-    return { message: 'Generated plan deleted successfully' };
+    return { 
+      success: true,
+      message: 'Generated plan deleted successfully' 
+    };
   }
 
   @Delete('accepted/:id')
@@ -263,7 +276,10 @@ export class PlansController {
     @Param('id', ParseIntPipe) id: number,
   ) {
     await this.plansService.cancelAcceptedPlan(req.user.id, id);
-    return { message: 'Accepted plan cancelled successfully' };
+    return { 
+      success: true,
+      message: 'Accepted plan cancelled successfully' 
+    };
   }
 
   @Get('types')
