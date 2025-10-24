@@ -13,6 +13,7 @@ export class GeminiService {
 
   constructor(private configService: ConfigService) {
     const apiKey = this.configService.get<string>('GEMINI_API_KEY');
+    const modelName = this.configService.get<string>('GEMINI_MODEL') || 'gemini-2.5-pro';
 
     if (!apiKey) {
       throw new Error('GEMINI_API_KEY is not configured');
@@ -21,7 +22,7 @@ export class GeminiService {
     this.genAI = new GoogleGenerativeAI(apiKey);
 
     this.model = this.genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash-exp',
+      model: modelName,
       generationConfig: {
         temperature: 0.7,
         maxOutputTokens: 16000,
@@ -35,62 +36,92 @@ export class GeminiService {
     response: FitnessPlanResponse;
     model: string;
   }> {
-    try {
-      const requestedDays = promptData.duration_days;
-      const generateDays = requestedDays > 7 ? 7 : requestedDays;
-      
-      const modifiedPromptData = { ...promptData, duration_days: generateDays };
-      const prompt = this.buildPrompt(modifiedPromptData);
-
-      this.logger.log(`Generating ${generateDays}-day fitness plan with Gemini 2.0 Flash (requested: ${requestedDays} days)...`);
-
-      const result = await this.model.generateContent(prompt);
-      const response = result.response;
-      const text = response.text();
-
-      this.logger.log(`Received response with ${text.length} characters`);
-
-      // Check if response is empty or incomplete
-      if (!text || text.trim().length === 0) {
-        throw new Error('Empty response from Gemini API');
-      }
-
-      let parsedResponse: FitnessPlanResponse;
-      
+    const maxRetries = 3;
+    const baseDelay = 2000; // 2 seconds
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        parsedResponse = JSON.parse(text);
-      } catch (parseError) {
-        this.logger.error('Failed to parse JSON response:', text.substring(0, 500));
-        throw new Error('Invalid JSON response from Gemini API. The response may be incomplete.');
+        const requestedDays = promptData.duration_days;
+        const generateDays = requestedDays > 7 ? 7 : requestedDays;
+        
+        const modifiedPromptData = { ...promptData, duration_days: generateDays };
+        const prompt = this.buildPrompt(modifiedPromptData);
+
+        this.logger.log(`Generating ${generateDays}-day fitness plan with Gemini 2.0 Flash (requested: ${requestedDays} days) - Attempt ${attempt}/${maxRetries}...`);
+
+        const result = await this.model.generateContent(prompt);
+        const response = result.response;
+        const text = response.text();
+
+        this.logger.log(`Received response with ${text.length} characters`);
+
+        // Check if response is empty or incomplete
+        if (!text || text.trim().length === 0) {
+          throw new Error('Empty response from Gemini API');
+        }
+
+        let parsedResponse: FitnessPlanResponse;
+        
+        try {
+          parsedResponse = JSON.parse(text);
+        } catch (parseError) {
+          this.logger.error('Failed to parse JSON response:', text.substring(0, 500));
+          throw new Error('Invalid JSON response from Gemini API. The response may be incomplete.');
+        }
+
+        if (!parsedResponse.workout_plan || !parsedResponse.meal_plan) {
+          this.logger.error('Invalid response structure:', parsedResponse);
+          throw new Error('Invalid response structure from Gemini API');
+        }
+
+        if (requestedDays > generateDays) {
+          parsedResponse = this.repeatPlan(parsedResponse, requestedDays);
+          this.logger.log(`Extended ${generateDays}-day plan to ${requestedDays} days by repeating`);
+        }
+
+        this.logger.log(
+          `Successfully generated ${parsedResponse.workout_plan.length}-day plan with structured output`,
+        );
+
+        const modelName = this.configService.get<string>('GEMINI_MODEL') || 'gemini-2.5-pro';
+
+        return {
+          response: parsedResponse,
+          model: modelName,
+        };
+      } catch (error) {
+        const isOverloadError = error.status === 503 || error.message?.includes('overloaded') || error.message?.includes('503');
+        const isLastAttempt = attempt === maxRetries;
+
+        this.logger.error(`Failed to generate plan with Gemini (Attempt ${attempt}/${maxRetries}):`, error.message);
+
+        // If it's an overload error and not the last attempt, retry with exponential backoff
+        if (isOverloadError && !isLastAttempt) {
+          const delay = baseDelay * Math.pow(2, attempt - 1); // Exponential backoff: 2s, 4s, 8s
+          this.logger.warn(`Gemini API overloaded. Retrying in ${delay}ms...`);
+          await this.sleep(delay);
+          continue; // Retry
+        }
+
+        // For non-overload errors or last attempt, throw immediately
+        if (error.message?.includes('API key')) {
+          throw new Error('Invalid or missing Gemini API key');
+        }
+
+        if (isOverloadError) {
+          throw new Error('Gemini API is currently overloaded. Please try again in a few minutes.');
+        }
+
+        throw new Error(`Plan generation failed: ${error.message}`);
       }
-
-      if (!parsedResponse.workout_plan || !parsedResponse.meal_plan) {
-        this.logger.error('Invalid response structure:', parsedResponse);
-        throw new Error('Invalid response structure from Gemini API');
-      }
-
-      if (requestedDays > generateDays) {
-        parsedResponse = this.repeatPlan(parsedResponse, requestedDays);
-        this.logger.log(`Extended ${generateDays}-day plan to ${requestedDays} days by repeating`);
-      }
-
-      this.logger.log(
-        `Successfully generated ${parsedResponse.workout_plan.length}-day plan with structured output`,
-      );
-
-      return {
-        response: parsedResponse,
-        model: 'gemini-2.0-flash-exp',
-      };
-    } catch (error) {
-      this.logger.error('Failed to generate plan with Gemini:', error);
-
-      if (error.message?.includes('API key')) {
-        throw new Error('Invalid or missing Gemini API key');
-      }
-
-      throw new Error(`Plan generation failed: ${error.message}`);
     }
+
+    // This should never be reached due to throw in loop, but TypeScript needs it
+    throw new Error('Plan generation failed after all retry attempts');
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   private repeatPlan(

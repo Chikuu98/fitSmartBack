@@ -246,7 +246,7 @@ export class PlansService {
   async getGeneratedPlans(userId: number, limit: number = 10, offset: number = 0): Promise<any> {
     const [plans, total] = await this.generatedPlanRepository.findAndCount({
       where: { user: { id: userId } },
-      relations: ['planType', 'user'],
+      relations: ['planType', 'user', 'acceptedPlan'],
       order: { created_at: 'DESC' },
       take: limit,
       skip: offset,
@@ -259,7 +259,7 @@ export class PlansService {
         duration_days: plan.duration_days,
         status: plan.status,
         created_at: plan.created_at,
-        accepted: !!plan.acceptedPlan,
+        is_accepted: !!plan.acceptedPlan,
       })),
       total,
       limit,
@@ -300,7 +300,7 @@ export class PlansService {
   async getGeneratedPlan(userId: number, planId: number): Promise<any> {
     const plan = await this.generatedPlanRepository.findOne({
       where: { id: planId, user: { id: userId } },
-      relations: ['planType', 'user'],
+      relations: ['planType', 'user', 'acceptedPlan'],
     });
 
     if (!plan) {
@@ -316,7 +316,7 @@ export class PlansService {
       generation_model: plan.generation_model,
       prompt_data: plan.prompt_data,
       created_at: plan.created_at,
-      accepted: !!plan.acceptedPlan,
+      is_accepted: !!plan.acceptedPlan,
     };
   }
 
