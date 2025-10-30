@@ -23,7 +23,7 @@ export class MealPlan {
   @Column({ comment: '1-7 for weekly plans, can extend for custom durations' })
   day_number: number;
 
-  @Column({ length: 20, comment: 'Monday, Tuesday, etc.' })
+  @Column({ length: 100, comment: 'Day name or description (e.g., "Day 1: Balanced Nutrition")' })
   day_name: string;
 
   @Column({ comment: 'Total daily calories' })

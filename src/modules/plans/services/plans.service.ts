@@ -158,7 +158,7 @@ export class PlansService {
       target_goal: acceptPlanDto.target_goal,
       initial_weight: acceptPlanDto.initial_weight,
       target_weight: acceptPlanDto.target_weight,
-      status: AcceptedPlanStatus.ACTIVE,
+      status: AcceptedPlanStatus.ACCEPTED,
     });
 
     const savedAcceptedPlan = await this.acceptedPlanRepository.save(acceptedPlan);
@@ -394,6 +394,102 @@ export class PlansService {
     plan.status = AcceptedPlanStatus.CANCELLED;
 
     await this.acceptedPlanRepository.save(plan);
+  }
+
+  async activatePlan(userId: number, planId: number): Promise<any> {
+    const plan = await this.acceptedPlanRepository.findOne({
+      where: { id: planId, user: { id: userId } },
+      relations: ['generatedPlan'],
+    });
+
+    if (!plan) {
+      throw new NotFoundException('Accepted plan not found');
+    }
+
+    if (plan.status !== AcceptedPlanStatus.ACCEPTED) {
+      throw new BadRequestException('Only accepted plans can be activated');
+    }
+
+    // Check if user already has an active plan
+    const existingActivePlan = await this.acceptedPlanRepository.findOne({
+      where: { user: { id: userId }, status: AcceptedPlanStatus.ACTIVE },
+    });
+
+    if (existingActivePlan) {
+      throw new BadRequestException(
+        `You already have an active plan: "${existingActivePlan.plan_name}". ` +
+        `Please pause or complete it before activating another plan.`
+      );
+    }
+
+    plan.status = AcceptedPlanStatus.ACTIVE;
+    const savedPlan = await this.acceptedPlanRepository.save(plan);
+
+    return {
+      id: savedPlan.id,
+      plan_name: savedPlan.plan_name,
+      status: savedPlan.status,
+      start_date: savedPlan.start_date,
+      end_date: savedPlan.end_date,
+    };
+  }
+
+  async pausePlan(userId: number, planId: number): Promise<any> {
+    const plan = await this.acceptedPlanRepository.findOne({
+      where: { id: planId, user: { id: userId } },
+    });
+
+    if (!plan) {
+      throw new NotFoundException('Accepted plan not found');
+    }
+
+    if (plan.status !== AcceptedPlanStatus.ACTIVE) {
+      throw new BadRequestException('Only active plans can be paused');
+    }
+
+    plan.status = AcceptedPlanStatus.PAUSED;
+    const savedPlan = await this.acceptedPlanRepository.save(plan);
+
+    return {
+      id: savedPlan.id,
+      plan_name: savedPlan.plan_name,
+      status: savedPlan.status,
+    };
+  }
+
+  async resumePlan(userId: number, planId: number): Promise<any> {
+    const plan = await this.acceptedPlanRepository.findOne({
+      where: { id: planId, user: { id: userId } },
+    });
+
+    if (!plan) {
+      throw new NotFoundException('Accepted plan not found');
+    }
+
+    if (plan.status !== AcceptedPlanStatus.PAUSED) {
+      throw new BadRequestException('Only paused plans can be resumed');
+    }
+
+    // Check if user already has an active plan
+    const existingActivePlan = await this.acceptedPlanRepository.findOne({
+      where: { user: { id: userId }, status: AcceptedPlanStatus.ACTIVE },
+    });
+
+    if (existingActivePlan) {
+      throw new BadRequestException(
+        `You already have an active plan: "${existingActivePlan.plan_name}". ` +
+        `Please pause or complete it before resuming this plan.`
+      );
+    }
+
+    plan.status = AcceptedPlanStatus.ACTIVE;
+    const savedPlan = await this.acceptedPlanRepository.save(plan);
+
+    return {
+      id: savedPlan.id,
+      plan_name: savedPlan.plan_name,
+      status: savedPlan.status,
+    };
   }
 
   async getPlanTypes(): Promise<any[]> {

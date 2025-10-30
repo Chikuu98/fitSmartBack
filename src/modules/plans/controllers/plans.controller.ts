@@ -66,7 +66,7 @@ export class PlansController {
   @Post(':planId/accept')
   @ApiOperation({ 
     summary: 'Accept a generated plan',
-    description: 'Accept and activate a generated plan to start tracking progress'
+    description: 'Accept a generated plan. Status will be "accepted". Use the activate endpoint to make it active.'
   })
   @ApiParam({ name: 'planId', description: 'Generated plan ID' })
   @ApiResponse({
@@ -80,7 +80,7 @@ export class PlansController {
         plan_name: 'My Summer Fitness Plan',
         start_date: '2025-07-10',
         end_date: '2025-08-07',
-        status: 'active',
+        status: 'accepted',
         created_at: '2025-07-10T10:00:00Z'
       }
     }
@@ -279,6 +279,85 @@ export class PlansController {
     return { 
       success: true,
       message: 'Accepted plan cancelled successfully' 
+    };
+  }
+
+  @Post('accepted/:id/activate')
+  @ApiOperation({ 
+    summary: 'Activate an accepted plan',
+    description: 'Change plan status from accepted to active. Only one plan can be active at a time.'
+  })
+  @ApiParam({ name: 'id', description: 'Accepted plan ID' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Plan activated successfully',
+    schema: {
+      example: {
+        success: true,
+        message: 'Plan activated successfully',
+        data: {
+          id: 1,
+          plan_name: 'My Summer Fitness Plan',
+          status: 'active',
+          start_date: '2025-07-10',
+          end_date: '2025-08-07',
+        }
+      }
+    }
+  })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Accepted plan not found' })
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Plan cannot be activated or another plan is already active' })
+  async activatePlan(
+    @Request() req,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    const result = await this.plansService.activatePlan(req.user.id, id);
+    return { 
+      success: true,
+      message: 'Plan activated successfully',
+      data: result
+    };
+  }
+
+  @Post('accepted/:id/pause')
+  @ApiOperation({ 
+    summary: 'Pause an active plan',
+    description: 'Pause an active plan to temporarily stop tracking progress'
+  })
+  @ApiParam({ name: 'id', description: 'Accepted plan ID' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Plan paused successfully' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Accepted plan not found' })
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Only active plans can be paused' })
+  async pausePlan(
+    @Request() req,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    const result = await this.plansService.pausePlan(req.user.id, id);
+    return { 
+      success: true,
+      message: 'Plan paused successfully',
+      data: result
+    };
+  }
+
+  @Post('accepted/:id/resume')
+  @ApiOperation({ 
+    summary: 'Resume a paused plan',
+    description: 'Resume a paused plan and change status back to active'
+  })
+  @ApiParam({ name: 'id', description: 'Accepted plan ID' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Plan resumed successfully' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Accepted plan not found' })
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Only paused plans can be resumed or another plan is already active' })
+  async resumePlan(
+    @Request() req,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    const result = await this.plansService.resumePlan(req.user.id, id);
+    return { 
+      success: true,
+      message: 'Plan resumed successfully',
+      data: result
     };
   }
 
