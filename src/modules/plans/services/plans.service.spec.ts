@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PlansService } from './plans.service';
-import { OpenAIService } from './openai.service';
 import { UserPreferencesService } from './user-preferences.service';
 import { GeneratedPlan } from '../entities/generated-plan.entity';
 import { AcceptedPlan } from '../entities/accepted-plan.entity';
@@ -23,7 +22,6 @@ describe('PlansService', () => {
   let workoutPlanRepository: Repository<WorkoutPlan>;
   let mealPlanRepository: Repository<MealPlan>;
   let planTypeRepository: Repository<PlanType>;
-  let openAIService: OpenAIService;
   let userPreferencesService: UserPreferencesService;
 
   const mockRepository = {
@@ -91,10 +89,6 @@ describe('PlansService', () => {
           useValue: mockRepository,
         },
         {
-          provide: OpenAIService,
-          useValue: mockOpenAIService,
-        },
-        {
           provide: UserPreferencesService,
           useValue: mockUserPreferencesService,
         },
@@ -117,7 +111,6 @@ describe('PlansService', () => {
     planTypeRepository = module.get<Repository<PlanType>>(
       getRepositoryToken(PlanType),
     );
-    openAIService = module.get<OpenAIService>(OpenAIService);
     userPreferencesService = module.get<UserPreferencesService>(UserPreferencesService);
   });
 
@@ -208,7 +201,6 @@ describe('PlansService', () => {
         where: { id: userId },
         relations: ['memberDetails'],
       });
-      expect(openAIService.generatePlan).toHaveBeenCalled();
       expect(generatedPlanRepository.create).toHaveBeenCalled();
       expect(generatedPlanRepository.save).toHaveBeenCalled();
       expect(result).toBeDefined();
@@ -289,7 +281,7 @@ describe('PlansService', () => {
         generatedPlanId: 1,
         startDate: new Date('2024-01-01'),
         endDate: new Date('2024-01-31'),
-        status: 'active',
+        status: 'accepted',
         planName: 'My Fitness Plan',
         targetGoal: 'Lose 5kg',
         initialWeight: 80,

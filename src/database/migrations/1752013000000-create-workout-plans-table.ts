@@ -25,8 +25,8 @@ export class CreateWorkoutPlansTable1752013000000 implements MigrationInterface 
           {
             name: 'day_name',
             type: 'varchar',
-            length: '20',
-            comment: 'Monday, Tuesday, etc.'
+            length: '100',
+            comment: 'Day name or description (e.g., "Day 1: Full Body Strength")'
           },
           {
             name: 'total_duration_minutes',

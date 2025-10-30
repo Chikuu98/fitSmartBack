@@ -14,6 +14,7 @@ import { User } from '@/core/users/user.entity';
 import { GeneratedPlan } from './generated-plan.entity';
 
 export enum AcceptedPlanStatus {
+  ACCEPTED = 'accepted',
   ACTIVE = 'active',
   COMPLETED = 'completed',
   PAUSED = 'paused',
@@ -57,7 +58,7 @@ export class AcceptedPlan {
   @Column('decimal', { precision: 5, scale: 2, nullable: true })
   target_weight: number;
 
-  @Column({ type: 'enum', enum: AcceptedPlanStatus, default: AcceptedPlanStatus.ACTIVE })
+  @Column({ type: 'enum', enum: AcceptedPlanStatus, default: AcceptedPlanStatus.ACCEPTED })
   status: AcceptedPlanStatus;
 
   @Column('decimal', { precision: 5, scale: 2, default: 0, comment: 'Overall plan completion percentage' })

@@ -26,8 +26,8 @@ export class CreateMealPlansTable1752014000000 implements MigrationInterface {
           {
             name: 'day_name',
             type: 'varchar',
-            length: '20',
-            comment: 'Monday, Tuesday, etc.'
+            length: '100',
+            comment: 'Day name or description (e.g., "Day 1: Balanced Nutrition")'
           },
           {
             name: 'total_calories',

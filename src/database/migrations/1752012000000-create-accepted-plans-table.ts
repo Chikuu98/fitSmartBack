@@ -66,8 +66,8 @@ export class CreateAcceptedPlansTable1752012000000 implements MigrationInterface
           {
             name: 'status',
             type: 'enum',
-            enum: ['active', 'completed', 'paused', 'cancelled'],
-            default: "'active'"
+            enum: ['accepted', 'active', 'completed', 'paused', 'cancelled'],
+            default: "'accepted'"
           },
           {
             name: 'completion_percentage',
