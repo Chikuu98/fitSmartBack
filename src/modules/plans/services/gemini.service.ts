@@ -9,11 +9,10 @@ import { FitnessPlanSchema } from '../schemas/gemini-response.schema';
 export class GeminiService {
   private readonly logger = new Logger(GeminiService.name);
   private readonly genAI: GoogleGenerativeAI;
-  private readonly model;
+  private readonly fallbackModels: string[];
 
   constructor(private configService: ConfigService) {
     const apiKey = this.configService.get<string>('GEMINI_API_KEY');
-    const modelName = this.configService.get<string>('GEMINI_MODEL') || 'gemini-2.5-pro';
 
     if (!apiKey) {
       throw new Error('GEMINI_API_KEY is not configured');
@@ -21,7 +20,18 @@ export class GeminiService {
 
     this.genAI = new GoogleGenerativeAI(apiKey);
 
-    this.model = this.genAI.getGenerativeModel({
+    this.fallbackModels = [
+      this.configService.get<string>('GEMINI_PRIMARY_MODEL') || 'gemini-2.5-flash',
+      this.configService.get<string>('GEMINI_SECONDARY_MODEL') || 'gemini-2.0-flash',
+      this.configService.get<string>('GEMINI_TERTIARY_MODEL') || 'gemini-2.0-flash-exp',
+      this.configService.get<string>('GEMINI_FALLBACK_MODEL') || 'gemini-2.5-pro',
+    ].filter((model, index, self) => model && self.indexOf(model) === index);
+
+    this.logger.log(`Initialized with fallback models: ${this.fallbackModels.join(' → ')}`);
+  }
+
+  private createModel(modelName: string) {
+    return this.genAI.getGenerativeModel({
       model: modelName,
       generationConfig: {
         temperature: 0.7,
@@ -36,88 +46,126 @@ export class GeminiService {
     response: FitnessPlanResponse;
     model: string;
   }> {
-    const maxRetries = 3;
-    const baseDelay = 2000; // 2 seconds
-    
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        const requestedDays = promptData.duration_days;
-        const generateDays = requestedDays > 7 ? 7 : requestedDays;
-        
-        const modifiedPromptData = { ...promptData, duration_days: generateDays };
-        const prompt = this.buildPrompt(modifiedPromptData);
+    const requestedDays = promptData.duration_days;
+    const generateDays = requestedDays > 7 ? 7 : requestedDays;
+    const modifiedPromptData = { ...promptData, duration_days: generateDays };
+    const prompt = this.buildPrompt(modifiedPromptData);
 
-        this.logger.log(`Generating ${generateDays}-day fitness plan with Gemini 2.0 Flash (requested: ${requestedDays} days) - Attempt ${attempt}/${maxRetries}...`);
+    for (let modelIndex = 0; modelIndex < this.fallbackModels.length; modelIndex++) {
+      const currentModel = this.fallbackModels[modelIndex];
+      const maxRetriesPerModel = 2;
+      const baseDelay = 1000;
 
-        const result = await this.model.generateContent(prompt);
-        const response = result.response;
-        const text = response.text();
+      this.logger.log(
+        `Attempting with model [${modelIndex + 1}/${this.fallbackModels.length}]: ${currentModel}`,
+      );
 
-        this.logger.log(`Received response with ${text.length} characters`);
-
-        // Check if response is empty or incomplete
-        if (!text || text.trim().length === 0) {
-          throw new Error('Empty response from Gemini API');
-        }
-
-        let parsedResponse: FitnessPlanResponse;
-        
+      for (let attempt = 1; attempt <= maxRetriesPerModel; attempt++) {
         try {
-          parsedResponse = JSON.parse(text);
-        } catch (parseError) {
-          this.logger.error('Failed to parse JSON response:', text.substring(0, 500));
-          throw new Error('Invalid JSON response from Gemini API. The response may be incomplete.');
+          this.logger.log(
+            `Generating ${generateDays}-day fitness plan with ${currentModel} (requested: ${requestedDays} days) - Attempt ${attempt}/${maxRetriesPerModel}...`,
+          );
+
+          const model = this.createModel(currentModel);
+          const result = await model.generateContent(prompt);
+          const response = result.response;
+          const text = response.text();
+
+          this.logger.log(`Received response with ${text.length} characters from ${currentModel}`);
+
+          if (!text || text.trim().length === 0) {
+            throw new Error('Empty response from Gemini API');
+          }
+
+          let parsedResponse: FitnessPlanResponse;
+
+          try {
+            parsedResponse = JSON.parse(text);
+          } catch (parseError) {
+            this.logger.error('Failed to parse JSON response:', text.substring(0, 500));
+            throw new Error(
+              'Invalid JSON response from Gemini API. The response may be incomplete.',
+            );
+          }
+
+          if (!parsedResponse.workout_plan || !parsedResponse.meal_plan) {
+            this.logger.error('Invalid response structure:', parsedResponse);
+            throw new Error('Invalid response structure from Gemini API');
+          }
+
+          if (requestedDays > generateDays) {
+            parsedResponse = this.repeatPlan(parsedResponse, requestedDays);
+            this.logger.log(
+              `Extended ${generateDays}-day plan to ${requestedDays} days by repeating`,
+            );
+          }
+
+          this.logger.log(
+            `Successfully generated ${parsedResponse.workout_plan.length}-day plan using ${currentModel}`,
+          );
+
+          return {
+            response: parsedResponse,
+            model: currentModel,
+          };
+        } catch (error) {
+          const isRateLimitError = 
+            error.status === 429 || 
+            error.message?.includes('rate limit') || 
+            error.message?.includes('quota') ||
+            error.message?.includes('429');
+          
+          const isOverloadError = 
+            error.status === 503 || 
+            error.message?.includes('overloaded') || 
+            error.message?.includes('503');
+          
+          const isLastAttempt = attempt === maxRetriesPerModel;
+          const isLastModel = modelIndex === this.fallbackModels.length - 1;
+
+          this.logger.error(
+            `Failed with ${currentModel} (Attempt ${attempt}/${maxRetriesPerModel}):`,
+            error.message,
+          );
+
+          if ((isRateLimitError || isOverloadError) && !isLastModel) {
+            this.logger.warn(
+              `${isRateLimitError ? 'Rate limit' : 'Overload'} detected on ${currentModel}. Switching to next model...`,
+            );
+            break;
+          }
+
+          if (!isLastAttempt && !isLastModel) {
+            const delay = baseDelay * Math.pow(2, attempt - 1);
+            this.logger.warn(`Retrying ${currentModel} in ${delay}ms...`);
+            await this.sleep(delay);
+            continue;
+          }
+
+          if (isLastModel && isLastAttempt) {
+            if (error.message?.includes('API key')) {
+              throw new Error('Invalid or missing Gemini API key');
+            }
+
+            if (isRateLimitError) {
+              throw new Error(
+                'All Gemini models are rate-limited. Please try again in a few minutes.',
+              );
+            }
+
+            if (isOverloadError) {
+              throw new Error(
+                'All Gemini models are currently overloaded. Please try again later.',
+              );
+            }
+
+            throw new Error(`Plan generation failed with all models: ${error.message}`);
+          }
         }
-
-        if (!parsedResponse.workout_plan || !parsedResponse.meal_plan) {
-          this.logger.error('Invalid response structure:', parsedResponse);
-          throw new Error('Invalid response structure from Gemini API');
-        }
-
-        if (requestedDays > generateDays) {
-          parsedResponse = this.repeatPlan(parsedResponse, requestedDays);
-          this.logger.log(`Extended ${generateDays}-day plan to ${requestedDays} days by repeating`);
-        }
-
-        this.logger.log(
-          `Successfully generated ${parsedResponse.workout_plan.length}-day plan with structured output`,
-        );
-
-        const modelName = this.configService.get<string>('GEMINI_MODEL') || 'gemini-2.5-pro';
-
-        return {
-          response: parsedResponse,
-          model: modelName,
-        };
-      } catch (error) {
-        const isOverloadError = error.status === 503 || error.message?.includes('overloaded') || error.message?.includes('503');
-        const isLastAttempt = attempt === maxRetries;
-
-        this.logger.error(`Failed to generate plan with Gemini (Attempt ${attempt}/${maxRetries}):`, error.message);
-
-        // If it's an overload error and not the last attempt, retry with exponential backoff
-        if (isOverloadError && !isLastAttempt) {
-          const delay = baseDelay * Math.pow(2, attempt - 1); // Exponential backoff: 2s, 4s, 8s
-          this.logger.warn(`Gemini API overloaded. Retrying in ${delay}ms...`);
-          await this.sleep(delay);
-          continue; // Retry
-        }
-
-        // For non-overload errors or last attempt, throw immediately
-        if (error.message?.includes('API key')) {
-          throw new Error('Invalid or missing Gemini API key');
-        }
-
-        if (isOverloadError) {
-          throw new Error('Gemini API is currently overloaded. Please try again in a few minutes.');
-        }
-
-        throw new Error(`Plan generation failed: ${error.message}`);
       }
     }
 
-    // This should never be reached due to throw in loop, but TypeScript needs it
-    throw new Error('Plan generation failed after all retry attempts');
+    throw new Error('Plan generation failed after trying all fallback models');
   }
 
   private sleep(ms: number): Promise<void> {
@@ -249,7 +297,8 @@ Adjust based on this feedback.`;
 
   async testConnection(): Promise<boolean> {
     try {
-      const result = await this.model.generateContent('Hello');
+      const model = this.createModel(this.fallbackModels[0]);
+      const result = await model.generateContent('Hello');
       return !!result.response.text();
     } catch (error) {
       this.logger.error('Gemini API connection test failed:', error);
