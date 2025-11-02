@@ -9,9 +9,12 @@ import { SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { swaggerConfig } from './config/swagger.config';
 import { AllExceptionsFilter } from './config/http-exception.filter';
+import { winstonLoggerConfig } from './config/logger.config';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: winstonLoggerConfig,
+  });
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api-docs', app, document);
@@ -50,5 +53,8 @@ async function bootstrap() {
   });
 
   await app.listen(port);
+  console.log(`Application is running on: http://localhost:${port}`);
+  console.log(`API Documentation available at: http://localhost:${port}/api-docs`);
+  console.log(`Logs are being written to: ${process.cwd()}/logs`);
 }
 bootstrap();

@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { WinstonModule } from 'nest-winston';
 import { typeOrmConfig } from './config/typeorm.config';
+import { createWinstonLogger } from './config/logger.config';
 import { UsersModule } from './core/users/users.module';
 import { AuthModule } from './core/auth/auth.module';
 import { MentorSlotsModule } from './modules/mentorSlots/slots/mentor-slots.module';
@@ -10,10 +12,12 @@ import { CommunityForumsModule } from './modules/communityForums/community-forum
 import { PlansModule } from './modules/plans/plans.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AppLoggerService } from './common/services/app-logger.service';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    WinstonModule.forRoot(createWinstonLogger()),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -27,6 +31,7 @@ import { AppService } from './app.service';
     PlansModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, AppLoggerService],
+  exports: [AppLoggerService],
 })
 export class AppModule {}
