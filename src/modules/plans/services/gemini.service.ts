@@ -246,6 +246,11 @@ Adjust based on this feedback.`;
 - Include essential nutritional info (calories, protein, carbs, fats)
 - Practical exercises and meals`;
 
+    if (data.custom_prompt && data.custom_prompt.trim()) {
+      prompt += `\n\nADDITIONAL INSTRUCTIONS:
+${data.custom_prompt.trim()}`;
+    }
+
     return prompt;
   }
 
