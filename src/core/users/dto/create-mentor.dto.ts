@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsString,
   Length,
+  Matches,
 } from 'class-validator';
 import { Gender } from '@/core/users/user.entity';
 import { ApiProperty } from '@nestjs/swagger';
@@ -22,9 +23,22 @@ export class CreateMentorDto {
   email: string;
 
   @IsString()
-  @Length(6, 255)
+  @Length(8, 255, {
+    message: 'Password must be at least 8 characters long',
+  })
+  @Matches(
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+    {
+      message:
+        'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&)',
+    },
+  )
   @IsNotEmpty()
-  @ApiProperty({ example: 'password123' })
+  @ApiProperty({
+    example: 'SecurePass123!',
+    description:
+      'Password must be at least 8 characters and contain uppercase, lowercase, number, and special character',
+  })
   password: string;
 
   @IsEnum(Gender)
