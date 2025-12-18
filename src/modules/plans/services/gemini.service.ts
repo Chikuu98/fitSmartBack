@@ -218,7 +218,6 @@ USER PROFILE:
 - Fitness Level: ${data.fitness_level}
 - Diet: ${data.dietary_preference}`;
 
-    // Add previous plan performance if available
     if (data.previous_plan_performance) {
       prompt += `\n\nPREVIOUS PERFORMANCE:
 - Completion: ${data.previous_plan_performance.completion_rate || 'N/A'}%
@@ -229,7 +228,6 @@ USER PROFILE:
 Adjust based on this feedback.`;
     }
 
-    // Add learned preferences if available
     if (data.user_preferences) {
       prompt += `\n\nPREFERENCES:
 - Duration: ${data.user_preferences.optimal_workout_duration || 'N/A'} min
