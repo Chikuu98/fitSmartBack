@@ -78,4 +78,7 @@ export class PlanGenerationPromptDto {
 
   @ApiProperty({ description: 'User preferences', required: false })
   user_preferences?: any;
+
+  @ApiProperty({ description: 'Custom prompt additions', required: false })
+  custom_prompt?: string;
 }

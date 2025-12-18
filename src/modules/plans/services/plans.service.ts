@@ -287,12 +287,19 @@ export class PlansService {
       generatedPlan: {
         id: plan.generatedPlan.id,
         planType: plan.generatedPlan.planType,
+        duration_days: plan.generatedPlan.duration_days,
       },
       plan_name: plan.plan_name,
       start_date: plan.start_date,
       end_date: plan.end_date,
+      target_goal: plan.target_goal,
+      initial_weight: plan.initial_weight,
+      target_weight: plan.target_weight,
       status: plan.status,
-      progress_percentage: plan.completion_percentage || 0,
+      completion_percentage: plan.completion_percentage || 0,
+      duration_days: plan.generatedPlan.duration_days,
+      accepted_at: plan.accepted_at,
+      completed_at: plan.completed_at,
       created_at: plan.created_at,
     }));
   }
@@ -519,6 +526,7 @@ export class PlansService {
       dietary_preference: memberDetail.dietary_preference,
       duration_days: generatePlanDto.duration_days || 28,
       target_weight: generatePlanDto.target_weight,
+      custom_prompt: generatePlanDto.custom_prompt,
     };
 
     if (generatePlanDto.include_history) {
