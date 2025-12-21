@@ -70,6 +70,15 @@ export class AcceptedPlan {
   @Column({ nullable: true })
   completed_at: Date;
 
+  @Column({ nullable: true, comment: 'Timestamp when the plan was last paused' })
+  paused_at: Date;
+
+  @Column({ nullable: true, comment: 'Timestamp when the plan was last resumed' })
+  resumed_at: Date;
+
+  @Column({ default: 0, comment: 'Total number of days the plan has been paused' })
+  total_paused_days: number;
+
   @CreateDateColumn()
   created_at: Date;
 
