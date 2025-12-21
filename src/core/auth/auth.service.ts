@@ -15,14 +15,37 @@ export class AuthService {
 
   async validateUser(email: string, password: string) {
     const user = await this.userRepo.findOne({ where: { email } });
-    if (user && (await bcrypt.compare(password, user.password))) {
-      const { password, ...result } = user;
-      return result;
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      throw new UnauthorizedException({
+        message: 'Invalid credentials',
+        success: false,
+      });
     }
-    throw new UnauthorizedException({
-      message: 'Invalid credentials',
-      success: false,
-    });
+
+    // Check user account status
+    if (user.status === 'pending_review') {
+      throw new UnauthorizedException({
+        message: 'Your account is pending admin approval. Please wait for approval to login.',
+        success: false,
+      });
+    }
+
+    if (user.status === 'suspended') {
+      throw new UnauthorizedException({
+        message: 'Your account has been suspended. Please contact support.',
+        success: false,
+      });
+    }
+
+    if (user.status === 'banned') {
+      throw new UnauthorizedException({
+        message: 'Your account has been banned. Please contact support.',
+        success: false,
+      });
+    }
+
+    const { password: _, ...result } = user;
+    return result;
   }
 
   async login(user: any) {

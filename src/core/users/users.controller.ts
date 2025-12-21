@@ -27,6 +27,8 @@ import { UpdateSocialLinkDto } from './dto/update-social-link.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateMemberDetailsDto } from './dto/update-member-details.dto';
 import { UpdateMentorDetailsDto } from './dto/update-mentor-details.dto';
+import { UpdateUserStatusDto } from './dto/update-user-status.dto';
+import { UserAccountStatus } from './user.entity';
 
 @ApiTags('Users')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -157,5 +159,43 @@ export class UsersController {
     @Req() req: any,
   ) {
     return this.usersService.updateSocialLink(req.user.user_id, id, dto);
+  }
+
+  // Admin endpoints
+  @Get('/admin/pending-mentors')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({
+    summary: 'Get all pending mentor registrations (Admin only)',
+  })
+  async getPendingMentors() {
+    return this.usersService.getPendingMentors();
+  }
+
+  @Get('/admin/mentors')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({
+    summary: 'Get all mentors with optional status filter (Admin only)',
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: UserAccountStatus,
+    description: 'Filter by user account status',
+  })
+  async getAllMentorsByAdmin(@Query('status') status?: UserAccountStatus) {
+    return this.usersService.getAllMentors(status);
+  }
+
+  @Put('/admin/users/:id/status')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({
+    summary: 'Update user account status (Admin only)',
+  })
+  async updateUserStatus(
+    @Param('id') id: number,
+    @Body() dto: UpdateUserStatusDto,
+    @Req() req: any,
+  ) {
+    return this.usersService.updateUserStatus(id, dto.status, req.user);
   }
 }

@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import { User, UserRole } from './user.entity';
+import { User, UserRole, UserAccountStatus } from './user.entity';
 import * as bcrypt from 'bcrypt';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { CreateMentorDto } from './dto/create-mentor.dto';
@@ -77,6 +77,7 @@ export class UsersService {
       role: UserRole.MENTOR,
       country: dto.country,
       language: dto.language,
+      status: UserAccountStatus.PENDING_REVIEW,
     });
 
     const savedUser = await this.userRepo.save(user);
@@ -90,7 +91,7 @@ export class UsersService {
 
     await this.dataSource.getRepository(MentorDetail).save(mentorDetail);
     return {
-      message: 'Mentor registered successfully',
+      message: 'Mentor registration submitted successfully. Your account is pending admin approval.',
       success: true,
     };
   }
@@ -396,5 +397,87 @@ export class UsersService {
     Object.assign(link, dto);
     await linkRepo.save(link);
     return { success: true, message: 'Social link updated', data: link };
+  }
+
+  async getPendingMentors(): Promise<any> {
+    const pendingMentors = await this.userRepo.find({
+      where: {
+        role: UserRole.MENTOR,
+        status: UserAccountStatus.PENDING_REVIEW,
+      },
+      relations: ['mentorDetail'],
+      order: { created_at: 'DESC' },
+    });
+
+    return {
+      success: true,
+      data: pendingMentors.map((mentor) => instanceToPlain(mentor)),
+    };
+  }
+
+  async getAllMentors(status?: UserAccountStatus): Promise<any> {
+    const query = this.userRepo
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.mentorDetail', 'mentorDetail')
+      .leftJoinAndSelect('mentorDetail.certification', 'certification')
+      .leftJoinAndSelect('mentorDetail.socialLink', 'socialLink')
+      .where('user.role = :role', { role: UserRole.MENTOR });
+
+    if (status) {
+      query.andWhere('user.status = :status', { status });
+    }
+
+    query.orderBy('user.created_at', 'DESC');
+
+    const mentors = await query.getMany();
+
+    return {
+      success: true,
+      data: mentors.map((mentor) => instanceToPlain(mentor)),
+    };
+  }
+
+  async updateUserStatus(
+    user_id: number,
+    status: UserAccountStatus,
+    adminUser: any,
+  ): Promise<any> {
+    if (adminUser.role !== UserRole.ADMIN) {
+      throw new BadRequestException('Only admins can update user status');
+    }
+
+    const user = await this.userRepo.findOne({
+      where: { id: user_id },
+      relations: ['mentorDetail'],
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.status = status;
+    await this.userRepo.save(user);
+
+    let statusMessage = '';
+    switch (status) {
+      case UserAccountStatus.ACTIVE:
+        statusMessage = 'User account has been activated successfully';
+        break;
+      case UserAccountStatus.SUSPENDED:
+        statusMessage = 'User account has been suspended';
+        break;
+      case UserAccountStatus.BANNED:
+        statusMessage = 'User account has been banned';
+        break;
+      case UserAccountStatus.PENDING_REVIEW:
+        statusMessage = 'User account status set to pending review';
+        break;
+    }
+
+    return {
+      success: true,
+      message: statusMessage,
+      data: instanceToPlain(user),
+    };
   }
 }
