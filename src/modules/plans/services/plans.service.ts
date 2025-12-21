@@ -300,6 +300,9 @@ export class PlansService {
       duration_days: plan.generatedPlan.duration_days,
       accepted_at: plan.accepted_at,
       completed_at: plan.completed_at,
+      paused_at: plan.paused_at,
+      resumed_at: plan.resumed_at,
+      total_paused_days: plan.total_paused_days || 0,
       created_at: plan.created_at,
     }));
   }
@@ -363,6 +366,9 @@ export class PlansService {
       target_goal: plan.target_goal,
       initial_weight: plan.initial_weight,
       target_weight: plan.target_weight,
+      paused_at: plan.paused_at,
+      resumed_at: plan.resumed_at,
+      total_paused_days: plan.total_paused_days || 0,
       workoutPlan: workoutPlans,
       mealPlan: mealPlans,
       progress_summary: {
@@ -455,12 +461,14 @@ export class PlansService {
     }
 
     plan.status = AcceptedPlanStatus.PAUSED;
+    plan.paused_at = new Date();
     const savedPlan = await this.acceptedPlanRepository.save(plan);
 
     return {
       id: savedPlan.id,
       plan_name: savedPlan.plan_name,
       status: savedPlan.status,
+      paused_at: savedPlan.paused_at,
     };
   }
 
@@ -489,13 +497,29 @@ export class PlansService {
       );
     }
 
+    if (plan.paused_at) {
+      const now = new Date();
+      const pausedAt = new Date(plan.paused_at);
+      const daysPaused = Math.floor((now.getTime() - pausedAt.getTime()) / (1000 * 60 * 60 * 24));
+      
+      plan.total_paused_days = (plan.total_paused_days || 0) + daysPaused;
+
+      const currentEndDate = new Date(plan.end_date);
+      currentEndDate.setDate(currentEndDate.getDate() + daysPaused);
+      plan.end_date = currentEndDate;
+    }
+
     plan.status = AcceptedPlanStatus.ACTIVE;
+    plan.resumed_at = new Date();
     const savedPlan = await this.acceptedPlanRepository.save(plan);
 
     return {
       id: savedPlan.id,
       plan_name: savedPlan.plan_name,
       status: savedPlan.status,
+      end_date: savedPlan.end_date,
+      total_paused_days: savedPlan.total_paused_days,
+      resumed_at: savedPlan.resumed_at,
     };
   }
 
