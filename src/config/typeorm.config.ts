@@ -26,6 +26,7 @@ import { MealProgress } from '@/modules/plans/entities/meal-progress.entity';
 import { PlanFeedback } from '@/modules/plans/entities/plan-feedback.entity';
 import { PlanAnalytics } from '@/modules/plans/entities/plan-analytics.entity';
 import { UserPreferences } from '@/modules/plans/entities/user-preferences.entity';
+import { PlanPausePeriod } from '@/modules/plans/entities/plan-pause-period.entity';
 import { Notification } from '@/modules/notifications/notification.entity';
 
 export const typeOrmConfig = (
@@ -64,6 +65,7 @@ export const typeOrmConfig = (
     PlanFeedback,
     PlanAnalytics,
     UserPreferences,
+    PlanPausePeriod,
     Notification
   ],
   synchronize: false,

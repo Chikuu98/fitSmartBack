@@ -25,6 +25,7 @@ import { ProgressService } from '../services/progress.service';
 import { CreateDailyProgressDto, UpdateDailyProgressDto } from '../dto/daily-progress.dto';
 import { CreateWorkoutProgressDto } from '../dto/workout-progress.dto';
 import { CreateMealProgressDto } from '../dto/meal-progress.dto';
+import { BatchProgressDto } from '../dto/batch-progress.dto';
 
 @ApiTags('Progress Tracking')
 @ApiBearerAuth()
@@ -296,5 +297,108 @@ export class ProgressController {
       progressId,
     );
     return { message: 'Daily progress deleted successfully' };
+  }
+
+  @Get('today/:acceptedPlanId')
+  @ApiOperation({ 
+    summary: 'Get today\'s plan details',
+    description: 'Get today\'s workout and meal plan with existing progress'
+  })
+  @ApiParam({ name: 'acceptedPlanId', description: 'Accepted plan ID' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Today\'s plan details retrieved successfully',
+    schema: {
+      example: {
+        acceptedPlan: { id: 1, plan_name: 'Summer Fitness' },
+        currentDayNumber: 3,
+        progressDate: '2025-12-22',
+        workout: {
+          id: 1,
+          day_number: 3,
+          day_name: 'Day 3: Upper Body Strength',
+          total_duration_minutes: 45,
+          exercises: [
+            { id: 1, name: 'Push-ups', sets: 3, reps: '12-15' }
+          ]
+        },
+        meal: {
+          id: 1,
+          day_number: 3,
+          day_name: 'Day 3: Balanced Nutrition',
+          total_calories: 2000,
+          meals: [
+            { id: 1, meal_type: 'breakfast', name: 'Oatmeal with Berries' }
+          ]
+        },
+        dailyProgress: null
+      }
+    }
+  })
+  async getTodaysPlanDetails(
+    @Request() req,
+    @Param('acceptedPlanId', ParseIntPipe) acceptedPlanId: number,
+  ) {
+    return this.progressService.getTodaysPlanDetails(
+      req.user.user_id,
+      acceptedPlanId,
+    );
+  }
+
+  @Post('batch/:acceptedPlanId')
+  @ApiOperation({ 
+    summary: 'Batch save progress',
+    description: 'Save progress for multiple workout exercises and meals at once'
+  })
+  @ApiParam({ name: 'acceptedPlanId', description: 'Accepted plan ID' })
+  @ApiQuery({ name: 'progressDate', description: 'Progress date (YYYY-MM-DD)', required: false })
+  @ApiQuery({ name: 'dayNumber', description: 'Day number in the plan', required: false })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Progress saved successfully',
+    schema: {
+      example: {
+        id: 1,
+        progress_date: '2025-12-22',
+        day_number: 3,
+        workoutProgress: [],
+        mealProgress: []
+      }
+    }
+  })
+  async saveBatchProgress(
+    @Request() req,
+    @Param('acceptedPlanId', ParseIntPipe) acceptedPlanId: number,
+    @Query('progressDate') progressDateStr?: string,
+    @Query('dayNumber', new ParseIntPipe({ optional: true })) dayNumber?: number,
+    @Body() batchDto: BatchProgressDto = {},
+  ) {
+    const progressDate = progressDateStr ? new Date(progressDateStr) : new Date();
+    progressDate.setHours(0, 0, 0, 0);
+
+    let finalDayNumber: number;
+    if (dayNumber) {
+      finalDayNumber = dayNumber;
+    } else {
+      const todaysDetails = await this.progressService.getTodaysPlanDetails(
+        req.user.user_id,
+        acceptedPlanId,
+      );
+      finalDayNumber = todaysDetails.currentDayNumber;
+    }
+
+    const result = await this.progressService.saveBatchProgress(
+      req.user.user_id,
+      acceptedPlanId,
+      progressDate,
+      finalDayNumber,
+      batchDto,
+    );
+    
+    return {
+      success: true,
+      message: 'Progress saved successfully',
+      data: result,
+    };
   }
 }

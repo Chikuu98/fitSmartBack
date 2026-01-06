@@ -8,7 +8,6 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { User } from '@/core/users/user.entity';
 import { CreateMemberDto } from '@/core/users/dto/create-member.dto';
 import { CreateMentorDto } from '@/core/users/dto/create-mentor.dto';
 
