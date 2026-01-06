@@ -437,6 +437,13 @@ export class ProgressService {
       relations: ['workoutProgress', 'workoutProgress.workoutExercise', 'mealProgress', 'mealProgress.mealItem'],
     });
 
+    // Check if today's progress has been fully tracked
+    let isFullyTracked = false;
+    if (dailyProgress) {
+      // Check if overall satisfaction is filled (indicates complete submission)
+      isFullyTracked = dailyProgress.overall_satisfaction !== null && dailyProgress.overall_satisfaction !== undefined;
+    }
+
     return {
       acceptedPlan: {
         id: acceptedPlan.id,
@@ -451,6 +458,7 @@ export class ProgressService {
       workout: workoutPlan,
       meal: mealPlan,
       dailyProgress,
+      isFullyTracked,
     };
   }
 
@@ -585,7 +593,43 @@ export class ProgressService {
       throw new NotFoundException('Failed to reload daily progress');
     }
 
+    // Update completion percentage for the accepted plan
+    await this.updatePlanCompletionPercentage(acceptedPlanId);
+
     return reloadedProgress;
+  }
+
+  /**
+   * Calculate and update the completion percentage for an accepted plan
+   */
+  private async updatePlanCompletionPercentage(acceptedPlanId: number): Promise<void> {
+    const acceptedPlan = await this.acceptedPlanRepository.findOne({
+      where: { id: acceptedPlanId },
+      relations: ['generatedPlan'],
+    });
+
+    if (!acceptedPlan) {
+      return;
+    }
+
+    // Count the number of days that have been tracked
+    const trackedDaysCount = await this.dailyProgressRepository.count({
+      where: { acceptedPlan: { id: acceptedPlanId } },
+    });
+
+    // Get the total plan duration from the generated plan
+    const totalDays = acceptedPlan.generatedPlan?.duration_days || 0;
+
+    // Calculate completion percentage
+    let completionPercentage = 0;
+    if (totalDays > 0) {
+      completionPercentage = Math.round((trackedDaysCount / totalDays) * 100 * 100) / 100; // Round to 2 decimal places
+      completionPercentage = Math.min(completionPercentage, 100); // Cap at 100%
+    }
+
+    // Update the accepted plan with the new completion percentage
+    acceptedPlan.completion_percentage = completionPercentage;
+    await this.acceptedPlanRepository.save(acceptedPlan);
   }
 
 
