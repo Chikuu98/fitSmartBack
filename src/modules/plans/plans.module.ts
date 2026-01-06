@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-// Entities
 import { PlanType } from './entities/plan-type.entity';
 import { GeneratedPlan } from './entities/generated-plan.entity';
 import { AcceptedPlan } from './entities/accepted-plan.entity';
@@ -15,19 +14,17 @@ import { MealProgress } from './entities/meal-progress.entity';
 import { PlanFeedback } from './entities/plan-feedback.entity';
 import { PlanAnalytics } from './entities/plan-analytics.entity';
 import { UserPreferences } from './entities/user-preferences.entity';
+import { PlanPausePeriod } from './entities/plan-pause-period.entity';
 
-// Controllers
 import { PlansController } from './controllers/plans.controller';
 import { ProgressController } from './controllers/progress.controller';
 import { AnalyticsController } from './controllers/analytics.controller';
 
-// Services
 import { PlansService } from './services/plans.service';
 import { GeminiService } from './services/gemini.service';
 
 import { AnalyticsService } from './services/analytics.service';
 
-// Import User entities for relationships
 import { User } from '@/core/users/user.entity';
 import { MemberDetail } from '@/core/users/members/member_detail.entity';
 import { FeedbackController } from './controllers/feedback.controller';
@@ -38,7 +35,6 @@ import { UserPreferencesService } from './services/user-preferences.service';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
-      // Plan entities
       PlanType,
       GeneratedPlan,
       AcceptedPlan,
@@ -52,7 +48,7 @@ import { UserPreferencesService } from './services/user-preferences.service';
       PlanFeedback,
       PlanAnalytics,
       UserPreferences,
-      // User entities
+      PlanPausePeriod,
       User,
       MemberDetail,
     ]),

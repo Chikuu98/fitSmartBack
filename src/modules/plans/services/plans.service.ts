@@ -10,7 +10,7 @@ import { WorkoutPlan } from '../entities/workout-plan.entity';
 import { WorkoutExercise } from '../entities/workout-exercise.entity';
 import { MealPlan } from '../entities/meal-plan.entity';
 import { MealItem } from '../entities/meal-item.entity';
-import { UserPreferences } from '../entities/user-preferences.entity';
+import { PlanPausePeriod } from '../entities/plan-pause-period.entity';
 import { GeminiService } from './gemini.service';
 import { GeneratePlanDto, PlanGenerationPromptDto } from '../dto/generate-plan.dto';
 import { AcceptPlanDto, PlanResponseDto } from '../dto/accept-plan.dto';
@@ -39,6 +39,8 @@ export class PlansService {
     private mealPlanRepository: Repository<MealPlan>,
     @InjectRepository(MealItem)
     private mealItemRepository: Repository<MealItem>,
+    @InjectRepository(PlanPausePeriod)
+    private pausePeriodRepository: Repository<PlanPausePeriod>,
     private geminiService: GeminiService,
     private userPreferencesService: UserPreferencesService,
   ) {}
@@ -280,7 +282,9 @@ export class PlansService {
 
     queryBuilder.orderBy('plan.created_at', 'DESC');
 
-    const plans = await queryBuilder.getMany();
+    let plans = await queryBuilder.getMany();
+
+    plans = await Promise.all(plans.map(plan => this.autoCompletePlanIfNeeded(plan)));
 
     return plans.map(plan => ({
       id: plan.id,
@@ -331,7 +335,7 @@ export class PlansService {
   }
 
   async getAcceptedPlan(userId: number, planId: number): Promise<any> {
-    const plan = await this.acceptedPlanRepository.findOne({
+    let plan = await this.acceptedPlanRepository.findOne({
       where: { id: planId, user: { id: userId } },
       relations: ['generatedPlan', 'generatedPlan.planType', 'workoutPlans', 'mealPlans'],
     });
@@ -339,6 +343,8 @@ export class PlansService {
     if (!plan) {
       throw new NotFoundException('Accepted plan not found');
     }
+
+    plan = await this.autoCompletePlanIfNeeded(plan);
 
     const workoutPlans = await this.workoutPlanRepository.find({
       where: { acceptedPlan: { id: planId } },
@@ -460,8 +466,24 @@ export class PlansService {
       throw new BadRequestException('Only active plans can be paused');
     }
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const endDate = new Date(plan.end_date);
+    endDate.setHours(0, 0, 0, 0);
+    
+    if (today > endDate) {
+      throw new BadRequestException('Cannot pause a plan that has already ended');
+    }
+
+    const pausePeriod = this.pausePeriodRepository.create({
+      acceptedPlan: plan,
+      pause_start_date: today,
+      duration_days: 0,
+    });
+    await this.pausePeriodRepository.save(pausePeriod);
+
     plan.status = AcceptedPlanStatus.PAUSED;
-    plan.paused_at = new Date();
+    plan.paused_at = today;
     const savedPlan = await this.acceptedPlanRepository.save(plan);
 
     return {
@@ -469,6 +491,7 @@ export class PlansService {
       plan_name: savedPlan.plan_name,
       status: savedPlan.status,
       paused_at: savedPlan.paused_at,
+      message: 'Plan paused. You cannot track progress while the plan is paused.',
     };
   }
 
@@ -485,7 +508,6 @@ export class PlansService {
       throw new BadRequestException('Only paused plans can be resumed');
     }
 
-    // Check if user already has an active plan
     const existingActivePlan = await this.acceptedPlanRepository.findOne({
       where: { user: { id: userId }, status: AcceptedPlanStatus.ACTIVE },
     });
@@ -497,13 +519,28 @@ export class PlansService {
       );
     }
 
-    if (plan.paused_at) {
-      const now = new Date();
-      const pausedAt = new Date(plan.paused_at);
-      const daysPaused = Math.floor((now.getTime() - pausedAt.getTime()) / (1000 * 60 * 60 * 24));
+    const pausePeriod = await this.pausePeriodRepository.findOne({
+      where: { 
+        acceptedPlan: { id: planId },
+        pause_end_date: null as any,
+      },
+      order: { created_at: 'DESC' },
+    });
+
+    if (pausePeriod) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const pauseStartDate = new Date(pausePeriod.pause_start_date);
+      pauseStartDate.setHours(0, 0, 0, 0);
+      
+      const daysPaused = Math.floor((today.getTime() - pauseStartDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      pausePeriod.pause_end_date = today;
+      pausePeriod.duration_days = daysPaused;
+      await this.pausePeriodRepository.save(pausePeriod);
       
       plan.total_paused_days = (plan.total_paused_days || 0) + daysPaused;
-
+      
       const currentEndDate = new Date(plan.end_date);
       currentEndDate.setDate(currentEndDate.getDate() + daysPaused);
       plan.end_date = currentEndDate;
@@ -520,6 +557,7 @@ export class PlansService {
       end_date: savedPlan.end_date,
       total_paused_days: savedPlan.total_paused_days,
       resumed_at: savedPlan.resumed_at,
+      message: `Plan resumed successfully. Your end date has been extended by ${pausePeriod?.duration_days || 0} day(s) to ${savedPlan.end_date.toLocaleDateString()}.`,
     };
   }
 
@@ -535,6 +573,27 @@ export class PlansService {
       typical_duration_weeks: 4,
       difficulty_level: 'beginner',
     }));
+  }
+
+  private async autoCompletePlanIfNeeded(plan: AcceptedPlan): Promise<AcceptedPlan> {
+    if (plan.status !== AcceptedPlanStatus.ACTIVE) {
+      return plan;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const endDate = new Date(plan.end_date);
+    endDate.setHours(0, 0, 0, 0);
+
+    if (today > endDate) {
+      this.logger.log(`Auto-completing plan ${plan.id} (${plan.plan_name}) - end date reached`);
+      plan.status = AcceptedPlanStatus.COMPLETED;
+      plan.completed_at = today;
+      return await this.acceptedPlanRepository.save(plan);
+    }
+
+    return plan;
   }
 
   private async buildPromptData(user: User, generatePlanDto: GeneratePlanDto): Promise<PlanGenerationPromptDto> {

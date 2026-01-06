@@ -12,6 +12,7 @@ import {
 } from 'typeorm';
 import { User } from '@/core/users/user.entity';
 import { GeneratedPlan } from './generated-plan.entity';
+import { PlanPausePeriod } from './plan-pause-period.entity';
 
 export enum AcceptedPlanStatus {
   ACCEPTED = 'accepted',
@@ -102,4 +103,7 @@ export class AcceptedPlan {
 
   @OneToMany('AcceptedPlan', 'previousPlan')
   subsequentPlans: AcceptedPlan[];
+
+  @OneToMany(() => PlanPausePeriod, (pausePeriod) => pausePeriod.acceptedPlan)
+  pausePeriods: PlanPausePeriod[];
 }
