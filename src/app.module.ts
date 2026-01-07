@@ -10,6 +10,7 @@ import { MentorSlotsModule } from './modules/mentorSlots/slots/mentor-slots.modu
 import { BookingModule } from './modules/bookings/booking.module';
 import { CommunityForumsModule } from './modules/communityForums/community-forums.module';
 import { PlansModule } from './modules/plans/plans.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AppLoggerService } from './common/services/app-logger.service';
@@ -29,6 +30,7 @@ import { AppLoggerService } from './common/services/app-logger.service';
     BookingModule,
     CommunityForumsModule,
     PlansModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppLoggerService],
