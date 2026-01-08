@@ -11,6 +11,7 @@ import { BookingModule } from './modules/bookings/booking.module';
 import { CommunityForumsModule } from './modules/communityForums/community-forums.module';
 import { PlansModule } from './modules/plans/plans.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { ReportsModule } from './modules/reports/reports.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AppLoggerService } from './common/services/app-logger.service';
@@ -31,6 +32,7 @@ import { AppLoggerService } from './common/services/app-logger.service';
     CommunityForumsModule,
     PlansModule,
     DashboardModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppLoggerService],
