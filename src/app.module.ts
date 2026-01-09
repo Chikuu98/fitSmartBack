@@ -14,7 +14,6 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AppLoggerService } from './common/services/app-logger.service';
 
 @Module({
   imports: [
@@ -35,7 +34,6 @@ import { AppLoggerService } from './common/services/app-logger.service';
     ReportsModule,
   ],
   controllers: [AppController],
-  providers: [AppService, AppLoggerService],
-  exports: [AppLoggerService],
+  providers: [AppService],
 })
 export class AppModule {}

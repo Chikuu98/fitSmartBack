@@ -12,6 +12,7 @@ export class GeminiService {
   private readonly fallbackModels: string[];
 
   constructor(private configService: ConfigService) {
+
     const apiKey = this.configService.get<string>('GEMINI_API_KEY');
 
     if (!apiKey) {
@@ -89,7 +90,7 @@ export class GeminiService {
           }
 
           if (!parsedResponse.workout_plan || !parsedResponse.meal_plan) {
-            this.logger.error('Invalid response structure:', parsedResponse);
+            this.logger.error('Invalid response structure', JSON.stringify(parsedResponse));
             throw new Error('Invalid response structure from Gemini API');
           }
 
@@ -304,7 +305,7 @@ ${data.custom_prompt.trim()}`;
       const result = await model.generateContent('Hello');
       return !!result.response.text();
     } catch (error) {
-      this.logger.error('Gemini API connection test failed:', error);
+      this.logger.error('Gemini API connection test failed', JSON.stringify(error));
       return false;
     }
   }

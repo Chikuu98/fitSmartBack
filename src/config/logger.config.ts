@@ -53,7 +53,7 @@ export const winstonLoggerConfig = WinstonModule.createLogger({
   level: 'info',
   transports: [
     new winston.transports.Console({
-      level: 'warn',
+      level: 'info',
       format: consoleFormat,
     }),
     errorRotateFileTransport,
@@ -86,7 +86,7 @@ export const createWinstonLogger = () => {
     level: 'info',
     transports: [
       new winston.transports.Console({
-        level: 'warn',
+        level: 'info',
         format: consoleFormat,
       }),
       errorRotateFileTransport,
