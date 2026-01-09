@@ -114,7 +114,7 @@ export class PlansService {
         throw error;
       }
     } catch (error) {
-      this.logger.error(`Failed to generate plan for user ${userId}:`, error);
+      this.logger.error(`Failed to generate plan for user ${userId}`, JSON.stringify(error));
       throw error;
     }
   }
@@ -652,7 +652,7 @@ export class PlansService {
         await this.parseAndStoreMealPlans(acceptedPlan, aiResponse.meal_plan);
       }
     } catch (error) {
-      this.logger.error('Failed to parse and store plans:', error);
+      this.logger.error('Failed to parse and store plans', JSON.stringify(error));
       throw new Error('Failed to process generated plan data');
     }
   }

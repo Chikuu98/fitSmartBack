@@ -15,17 +15,21 @@ export class AppLoggerService implements LoggerService {
     this.context = context;
   }
 
-  error(message: string, trace?: string, context?: string) {
+  error(message: string, trace?: string, context?: string, data?: any) {
     const logContext = context || this.context;
     this.logger.error(message, {
       context: logContext,
       trace,
+      data,
     });
   }
 
-  warn(message: string, context?: string) {
+  warn(message: string, context?: string, data?: any) {
     const logContext = context || this.context;
-    this.logger.warn(message, { context: logContext });
+    this.logger.warn(message, { 
+      context: logContext,
+      data,
+    });
   }
 
   debug(message: string, data?: any, context?: string) {
