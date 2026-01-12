@@ -18,6 +18,7 @@ import { RolesGuard } from '@/common/guards/roles.guard';
 import { User, UserRole } from '@/core/users/user.entity';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { AcceptBookingDto } from './dto/accept-booking.dto';
+import { ProcessPaymentDto } from './dto/process-payment.dto';
 
 @ApiTags('Bookings')
 @ApiBearerAuth()
@@ -94,5 +95,22 @@ export class BookingController {
   @Roles(UserRole.ADMIN, UserRole.MENTOR)
   async markAsPaid(@Param('id', ParseIntPipe) id: number) {
     return this.bookingService.markAsPaid(id);
+  }
+
+  @Post(':id/process-payment')
+  @ApiOperation({ summary: 'Process payment for a booking (fake payment)' })
+  @Roles(UserRole.MEMBER)
+  async processPayment(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() processPaymentDto: ProcessPaymentDto,
+  ) {
+    return this.bookingService.processPayment(id, processPaymentDto);
+  }
+
+  @Patch(':id/complete')
+  @ApiOperation({ summary: 'Mark a booking as completed' })
+  @Roles(UserRole.MENTOR)
+  async complete(@Param('id', ParseIntPipe) id: number) {
+    return this.bookingService.completeBooking(id);
   }
 }

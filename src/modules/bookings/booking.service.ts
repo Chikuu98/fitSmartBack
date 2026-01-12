@@ -49,11 +49,11 @@ export class BookingService {
 
     const unpaidPayment = new BookingPayment();
     unpaidPayment.booking = booking;
-    unpaidPayment.amount = 1000;
+    unpaidPayment.amount = 10;
     unpaidPayment.status = PaymentStatus.UNPAID;
     unpaidPayment.payment_method = '';
     unpaidPayment.transaction_id = '';
-    unpaidPayment.currency = 'INR';
+    unpaidPayment.currency = 'USD';
     await this.bookingPaymentRepo.save(unpaidPayment);
 
     return {
@@ -148,6 +148,55 @@ export class BookingService {
     };
   }
 
+  async processPayment(id: number, paymentData: any) {
+    const bookingResult = await this.findOne(id);
+    const booking = bookingResult.data;
+    
+    if (booking.status !== BookingStatus.ACCEPTED) {
+      throw new BadRequestException('Booking must be accepted before payment');
+    }
+    
+    const price = 10;
+
+    const paidPayment = await this.bookingPaymentRepo.findOne({
+      where: { booking: { id: booking.id }, status: PaymentStatus.PAID },
+    });
+    if (paidPayment) {
+      return {
+        success: false,
+        message: 'Payment already completed for this booking',
+      };
+    }
+
+    const unpaidPayment = await this.bookingPaymentRepo.findOne({
+      where: { booking: { id: booking.id }, status: PaymentStatus.UNPAID },
+      order: { id: 'DESC' },
+    });
+    
+    if (unpaidPayment) {
+      unpaidPayment.status = PaymentStatus.PAID;
+      unpaidPayment.amount = price;
+      unpaidPayment.paid_at = new Date();
+      unpaidPayment.payment_method = 'Credit Card';
+      unpaidPayment.transaction_id = `txn_${Date.now()}`;
+      unpaidPayment.currency = 'USD';
+      
+      await this.bookingPaymentRepo.save(unpaidPayment);
+      
+      return {
+        success: true,
+        message: 'Payment processed successfully',
+        data: {
+          transactionId: unpaidPayment.transaction_id,
+          amount: price,
+          currency: 'USD'
+        }
+      };
+    }
+    
+    throw new BadRequestException('No payment record found for this booking');
+  }
+
   async markAsPaid(id: number) {
     const bookingResult = await this.findOne(id);
     const booking = bookingResult.data;
@@ -179,5 +228,22 @@ export class BookingService {
         message: 'Payment marked as paid successfully',
       };
     }
+  }
+
+  async completeBooking(id: number) {
+    const bookingResult = await this.findOne(id);
+    const booking = bookingResult.data;
+    
+    if (booking.bookingPayment?.status !== PaymentStatus.PAID) {
+      throw new BadRequestException('Payment must be completed before marking as complete');
+    }
+    
+    booking.status = BookingStatus.COMPLETED;
+    await this.bookingRepo.save(booking);
+    
+    return {
+      success: true,
+      message: 'Booking marked as completed successfully',
+    };
   }
 }
