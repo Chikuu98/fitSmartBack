@@ -29,6 +29,7 @@ import { PlanAnalytics } from '@/modules/plans/entities/plan-analytics.entity';
 import { UserPreferences } from '@/modules/plans/entities/user-preferences.entity';
 import { PlanPausePeriod } from '@/modules/plans/entities/plan-pause-period.entity';
 import { Notification } from '@/modules/notifications/notification.entity';
+import { Rating } from '@/modules/bookings/ratings/rating.entity';
 dotenv.config();
 
 export const AppDataSource = new DataSource({
@@ -66,7 +67,8 @@ export const AppDataSource = new DataSource({
     PlanAnalytics,
     UserPreferences,
     PlanPausePeriod,
-    Notification
+    Notification,
+    Rating
   ],
   migrations: ['src/database/migrations/*.ts'],
   synchronize: false,

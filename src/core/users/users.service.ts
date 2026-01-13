@@ -22,12 +22,15 @@ import { CreateSocialLinkDto } from './dto/create-social-link.dto';
 import { UpdateSocialLinkDto } from './dto/update-social-link.dto';
 import { MemberDetail } from './members/member_detail.entity';
 import { instanceToPlain } from 'class-transformer';
+import { Rating } from '@/modules/bookings/ratings/rating.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private userRepo: Repository<User>,
+    @InjectRepository(Rating)
+    private ratingRepo: Repository<Rating>,
     private dataSource: DataSource,
   ) {}
 
@@ -178,10 +181,39 @@ export class UsersService {
 
     const mentors = await query.getMany();
 
+    // Add average ratings for each mentor
+    const mentorsWithRatings = await this.addAverageRatingsToMentors(mentors);
+
     return {
       success: true,
-      data: mentors.map((mentor) => instanceToPlain(mentor)),
+      data: mentorsWithRatings.map((mentor) => instanceToPlain(mentor)),
     };
+  }
+
+  // Helper method to calculate and add average ratings to mentors
+  private async addAverageRatingsToMentors(mentors: User[]): Promise<any[]> {
+    const mentorsWithRatings: any[] = [];
+
+    for (const mentor of mentors) {
+      const ratingStats = await this.ratingRepo
+        .createQueryBuilder('rating')
+        .select('AVG(rating.rating)', 'averageRating')
+        .addSelect('COUNT(rating.id)', 'totalRatings')
+        .where('rating.mentor_id = :mentorId', { mentorId: mentor.id })
+        .getRawOne();
+
+      const mentorWithRating = {
+        ...mentor,
+        averageRating: ratingStats.averageRating
+          ? parseFloat(parseFloat(ratingStats.averageRating).toFixed(1))
+          : 0,
+        totalRatings: parseInt(ratingStats.totalRatings) || 0,
+      };
+
+      mentorsWithRatings.push(mentorWithRating);
+    }
+
+    return mentorsWithRatings;
   }
 
   async updateUser(user_id: number, dto: UpdateUserDto, currentUser: any) {
@@ -431,9 +463,12 @@ export class UsersService {
 
     const mentors = await query.getMany();
 
+    // Add average ratings for each mentor
+    const mentorsWithRatings = await this.addAverageRatingsToMentors(mentors);
+
     return {
       success: true,
-      data: mentors.map((mentor) => instanceToPlain(mentor)),
+      data: mentorsWithRatings.map((mentor) => instanceToPlain(mentor)),
     };
   }
 
