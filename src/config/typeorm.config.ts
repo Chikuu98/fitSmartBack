@@ -28,6 +28,7 @@ import { PlanAnalytics } from '@/modules/plans/entities/plan-analytics.entity';
 import { UserPreferences } from '@/modules/plans/entities/user-preferences.entity';
 import { PlanPausePeriod } from '@/modules/plans/entities/plan-pause-period.entity';
 import { Notification } from '@/modules/notifications/notification.entity';
+import { Rating } from '@/modules/bookings/ratings/rating.entity';
 
 export const typeOrmConfig = (
   configService: ConfigService,
@@ -66,7 +67,8 @@ export const typeOrmConfig = (
     PlanAnalytics,
     UserPreferences,
     PlanPausePeriod,
-    Notification
+    Notification,
+    Rating
   ],
   synchronize: false,
 });
