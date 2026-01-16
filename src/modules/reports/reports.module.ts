@@ -10,9 +10,16 @@ import { MealProgress } from '@/modules/plans/entities/meal-progress.entity';
 import { Booking } from '@/modules/bookings/booking.entity';
 import { MentorTimeSlot } from '@/modules/mentorSlots/slots/mentor_time_slot.entity';
 import { WorkoutExercise } from '@/modules/plans/entities/workout-exercise.entity';
+import { UserReport } from './entities/user-report.entity';
+import { UserPunishment } from './entities/user-punishment.entity';
+import { ForumThread } from '@/modules/communityForums/entities/forum-thread.entity';
+import { ForumReply } from '@/modules/communityForums/entities/forum-reply.entity';
 
 import { MemberReportController } from './controllers/member-report.controller';
+import { UserReportController } from './controllers/user-report.controller';
 import { MemberReportService } from './services/member-report.service';
+import { UserReportService } from './services/user-report.service';
+import { AppLoggerService } from '@/common/services/app-logger.service';
 
 @Module({
   imports: [
@@ -26,10 +33,14 @@ import { MemberReportService } from './services/member-report.service';
       Booking,
       MentorTimeSlot,
       WorkoutExercise,
+      UserReport,
+      UserPunishment,
+      ForumThread,
+      ForumReply,
     ]),
   ],
-  controllers: [MemberReportController],
-  providers: [MemberReportService],
-  exports: [MemberReportService],
+  controllers: [MemberReportController, UserReportController],
+  providers: [MemberReportService, UserReportService, AppLoggerService],
+  exports: [MemberReportService, UserReportService],
 })
 export class ReportsModule {}
