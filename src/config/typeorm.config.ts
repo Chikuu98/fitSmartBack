@@ -29,6 +29,8 @@ import { UserPreferences } from '@/modules/plans/entities/user-preferences.entit
 import { PlanPausePeriod } from '@/modules/plans/entities/plan-pause-period.entity';
 import { Notification } from '@/modules/notifications/notification.entity';
 import { Rating } from '@/modules/bookings/ratings/rating.entity';
+import { UserReport } from '@/modules/reports/entities/user-report.entity';
+import { UserPunishment } from '@/modules/reports/entities/user-punishment.entity';
 
 export const typeOrmConfig = (
   configService: ConfigService,
@@ -68,7 +70,9 @@ export const typeOrmConfig = (
     UserPreferences,
     PlanPausePeriod,
     Notification,
-    Rating
+    Rating,
+    UserReport,
+    UserPunishment,
   ],
   synchronize: false,
 });
