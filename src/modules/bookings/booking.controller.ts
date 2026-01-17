@@ -86,8 +86,8 @@ export class BookingController {
   @Patch(':id/cancel')
   @ApiOperation({ summary: 'Cancel a booking' })
   @Roles(UserRole.MEMBER, UserRole.MENTOR)
-  async cancel(@Param('id', ParseIntPipe) id: number) {
-    return this.bookingService.cancelBooking(id);
+  async cancel(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
+    return this.bookingService.cancelBooking(id, req.user.user_id);
   }
 
   @Patch(':id/mark-paid')

@@ -11,6 +11,7 @@ import { ForumThread } from '../entities/forum-thread.entity';
 import { User } from '@/core/users/user.entity';
 import { CreateForumReplyDto } from '../dto/create-forum-reply.dto';
 import { UpdateForumReplyDto } from '../dto/update-forum-reply.dto';
+import { NotificationsService } from '@/modules/notifications/notifications.service';
 
 @Injectable()
 export class ForumReplyService {
@@ -21,6 +22,7 @@ export class ForumReplyService {
     private readonly forumThreadRepo: Repository<ForumThread>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async create(dto: CreateForumReplyDto, userId: number): Promise<any> {
@@ -60,6 +62,16 @@ export class ForumReplyService {
 
     if (!completeReply) {
       throw new NotFoundException('Created reply not found');
+    }
+
+    // Notify thread owner if the replier is not the thread owner
+    if (thread.user_id !== userId) {
+      await this.notificationsService.notifyForumReply(
+        thread.user_id,
+        user.name,
+        thread.id,
+        thread.title,
+      );
     }
 
     // Add computed count fields
