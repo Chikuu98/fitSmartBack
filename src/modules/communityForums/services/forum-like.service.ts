@@ -10,6 +10,7 @@ import { ForumThread } from '../entities/forum-thread.entity';
 import { ForumReply } from '../entities/forum-reply.entity';
 import { User } from '@/core/users/user.entity';
 import { ToggleForumLikeDto } from '../dto/toggle-forum-like.dto';
+import { NotificationsService } from '@/modules/notifications/notifications.service';
 
 @Injectable()
 export class ForumLikeService {
@@ -22,6 +23,7 @@ export class ForumLikeService {
     private readonly forumReplyRepo: Repository<ForumReply>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async toggleLike(dto: ToggleForumLikeDto, userId: number): Promise<any> {
@@ -39,15 +41,21 @@ export class ForumLikeService {
     }
 
     // Validate thread or reply exists
+    let thread: ForumThread | null = null;
+    let reply: ForumReply | null = null;
+
     if (dto.thread_id) {
-      const thread = await this.forumThreadRepo.findOne({ where: { id: dto.thread_id } });
+      thread = await this.forumThreadRepo.findOne({ where: { id: dto.thread_id } });
       if (!thread) {
         throw new NotFoundException('Forum thread not found');
       }
     }
 
     if (dto.reply_id) {
-      const reply = await this.forumReplyRepo.findOne({ where: { id: dto.reply_id } });
+      reply = await this.forumReplyRepo.findOne({ 
+        where: { id: dto.reply_id },
+        relations: ['thread'],
+      });
       if (!reply) {
         throw new NotFoundException('Forum reply not found');
       }
@@ -77,6 +85,25 @@ export class ForumLikeService {
       });
       await this.forumLikeRepo.save(like);
       action = 'liked';
+
+      // Send notification when liked (not unliked)
+      if (thread && thread.user_id !== userId) {
+        await this.notificationsService.notifyForumLike(
+          thread.user_id,
+          user.name,
+          'thread',
+          thread.id,
+          thread.id,
+        );
+      } else if (reply && reply.user_id !== userId) {
+        await this.notificationsService.notifyForumLike(
+          reply.user_id,
+          user.name,
+          'reply',
+          reply.id,
+          reply.thread?.id || reply.thread_id,
+        );
+      }
     }
 
     // Get updated likes count

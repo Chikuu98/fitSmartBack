@@ -11,6 +11,7 @@ import { CreateRatingDto } from './dto/create-rating.dto';
 import { UpdateRatingDto } from './dto/update-rating.dto';
 import { Booking, BookingStatus } from '../booking.entity';
 import { AppLoggerService } from '@/common/services/app-logger.service';
+import { NotificationsService } from '@/modules/notifications/notifications.service';
 
 @Injectable()
 export class RatingsService {
@@ -20,6 +21,7 @@ export class RatingsService {
     @InjectRepository(Booking)
     private readonly bookingRepository: Repository<Booking>,
     private readonly logger: AppLoggerService,
+    private readonly notificationsService: NotificationsService,
   ) {
     this.logger.setContext('RatingsService');
   }
@@ -74,6 +76,14 @@ export class RatingsService {
     const savedRating = await this.ratingRepository.save(newRating);
     this.logger.log(
       `Rating created for booking ${bookingId} by member ${memberId}`,
+    );
+
+    // Notify mentor about the new rating
+    await this.notificationsService.notifyNewRating(
+      booking.mentorSlot.mentor.id,
+      booking.member.name,
+      rating,
+      bookingId,
     );
 
     return {

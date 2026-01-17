@@ -11,6 +11,7 @@ import { UpdateBookingDto } from './dto/update-booking.dto';
 import { MentorTimeSlot } from '../mentorSlots/slots/mentor_time_slot.entity';
 import { User } from '@/core/users/user.entity';
 import { BookingPayment } from './booking_payments/booking_payment.entity';
+import { NotificationsService } from '@/modules/notifications/notifications.service';
 
 @Injectable()
 export class BookingService {
@@ -23,6 +24,7 @@ export class BookingService {
     private readonly userRepo: Repository<User>,
     @InjectRepository(BookingPayment)
     private readonly bookingPaymentRepo: Repository<BookingPayment>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async createBooking(dto: CreateBookingDto, user_id: number) {
@@ -55,6 +57,13 @@ export class BookingService {
     unpaidPayment.transaction_id = '';
     unpaidPayment.currency = 'USD';
     await this.bookingPaymentRepo.save(unpaidPayment);
+
+    // Notify mentor about new booking request
+    await this.notificationsService.notifyNewBookingRequest(
+      slot.mentor.id,
+      member.name,
+      booking.id,
+    );
 
     return {
       success: true,
@@ -113,7 +122,7 @@ export class BookingService {
   async findOne(id: number) {
     const booking = await this.bookingRepo.findOne({
       where: { id },
-      relations: ['mentorSlot', 'member', 'bookingPayment'],
+      relations: ['mentorSlot', 'mentorSlot.mentor', 'member', 'bookingPayment'],
     });
     if (!booking) throw new NotFoundException('Booking not found');
     return {
@@ -131,17 +140,44 @@ export class BookingService {
     slot.is_booked = true;
     await this.slotRepo.save(slot);
     await this.bookingRepo.save(booking);
+
+    // Notify member that booking is accepted
+    await this.notificationsService.notifyBookingAccepted(
+      booking.member.id,
+      slot.mentor.name,
+      booking.id,
+      meetLink,
+    );
+
     return {
       success: true,
       message: 'Booking accepted successfully',
     };
   }
 
-  async cancelBooking(id: number) {
+  async cancelBooking(id: number, cancelledByUserId?: number) {
     const bookingResult = await this.findOne(id);
     const booking = bookingResult.data;
     booking.status = BookingStatus.CANCELLED;
     await this.bookingRepo.save(booking);
+
+    // Determine who cancelled and notify the other party
+    if (cancelledByUserId) {
+      const isCancelledByMember = booking.member.id === cancelledByUserId;
+      const userToNotify = isCancelledByMember
+        ? booking.mentorSlot.mentor.id
+        : booking.member.id;
+      const cancelledByName = isCancelledByMember
+        ? booking.member.name
+        : booking.mentorSlot.mentor.name;
+
+      await this.notificationsService.notifyBookingCancelled(
+        userToNotify,
+        cancelledByName,
+        booking.id,
+      );
+    }
+
     return {
       success: true,
       message: 'Booking cancelled successfully',
