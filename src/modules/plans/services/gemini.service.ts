@@ -245,6 +245,15 @@ Adjust based on this feedback.`;
 - Include essential nutritional info (calories, protein, carbs, fats)
 - Practical exercises and meals`;
 
+    // Add location-based meal preferences if user opted in
+    if (data.location) {
+      prompt += `\n\nLOCATION-BASED PREFERENCES:
+- User is from ${data.location}
+- Include traditional and locally popular dishes from ${data.location} in meal plans
+- Use ingredients commonly available in ${data.location}
+- Adapt recipes to match ${data.location} cuisine style while meeting nutritional requirements`;
+    }
+
     if (data.custom_prompt && data.custom_prompt.trim()) {
       prompt += `\n\nADDITIONAL INSTRUCTIONS:
 ${data.custom_prompt.trim()}`;

@@ -43,6 +43,15 @@ export class GeneratePlanDto {
   @IsOptional()
   @IsString()
   custom_prompt?: string;
+
+  @ApiProperty({ 
+    description: 'Include location-based meal preferences',
+    default: false,
+    required: false
+  })
+  @IsOptional()
+  @IsBoolean()
+  prefer_local_meals?: boolean;
 }
 
 export class PlanGenerationPromptDto {
@@ -81,4 +90,7 @@ export class PlanGenerationPromptDto {
 
   @ApiProperty({ description: 'Custom prompt additions', required: false })
   custom_prompt?: string;
+
+  @ApiProperty({ description: 'User location/country for local meal preferences', required: false })
+  location?: string;
 }
