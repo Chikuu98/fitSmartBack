@@ -10,6 +10,7 @@ import { MealItem } from '../entities/meal-item.entity';
 import { WorkoutPlan } from '../entities/workout-plan.entity';
 import { MealPlan } from '../entities/meal-plan.entity';
 import { PlanPausePeriod } from '../entities/plan-pause-period.entity';
+import { MemberDetail } from '@/core/users/members/member_detail.entity';
 import { CreateDailyProgressDto, UpdateDailyProgressDto } from '../dto/daily-progress.dto';
 import { CreateWorkoutProgressDto } from '../dto/workout-progress.dto';
 import { CreateMealProgressDto } from '../dto/meal-progress.dto';
@@ -36,7 +37,25 @@ export class ProgressService {
     private mealPlanRepository: Repository<MealPlan>,
     @InjectRepository(PlanPausePeriod)
     private pausePeriodRepository: Repository<PlanPausePeriod>,
+    @InjectRepository(MemberDetail)
+    private memberDetailRepository: Repository<MemberDetail>,
   ) {}
+
+  /**
+   * Sync weight from progress tracking to user's member details
+   */
+  private async syncWeightToUserProfile(userId: number, weight: number): Promise<void> {
+    if (!weight || weight <= 0) return;
+    
+    const memberDetail = await this.memberDetailRepository.findOne({
+      where: { user: { id: userId } },
+    });
+    
+    if (memberDetail) {
+      memberDetail.weight = weight;
+      await this.memberDetailRepository.save(memberDetail);
+    }
+  }
 
   /**
    * Create daily progress entry
@@ -81,7 +100,14 @@ export class ProgressService {
       overall_satisfaction: dto.overall_satisfaction,
     });
 
-    return this.dailyProgressRepository.save(progress);
+    const savedProgress = await this.dailyProgressRepository.save(progress);
+
+    // Sync weight to user's member details if provided
+    if (dto.current_weight) {
+      await this.syncWeightToUserProfile(userId, dto.current_weight);
+    }
+
+    return savedProgress;
   }
 
   /**
@@ -281,7 +307,14 @@ export class ProgressService {
     }
 
     Object.assign(progress, updates);
-    return this.dailyProgressRepository.save(progress);
+    const savedProgress = await this.dailyProgressRepository.save(progress);
+
+    // Sync weight to user's member details if provided
+    if (updates.current_weight) {
+      await this.syncWeightToUserProfile(userId, updates.current_weight);
+    }
+
+    return savedProgress;
   }
 
   /**
@@ -524,6 +557,11 @@ export class ProgressService {
         overall_satisfaction: batchDto.dailyMetrics.overall_satisfaction,
       });
       dailyProgress = await this.dailyProgressRepository.save(dailyProgress);
+
+      // Sync weight to user's member details if provided
+      if (batchDto.dailyMetrics.current_weight) {
+        await this.syncWeightToUserProfile(userId, batchDto.dailyMetrics.current_weight);
+      }
     }
 
     if (batchDto.workouts && batchDto.workouts.length > 0) {

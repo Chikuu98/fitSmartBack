@@ -610,6 +610,10 @@ export class PlansService {
       duration_days: generatePlanDto.duration_days || 28,
       target_weight: generatePlanDto.target_weight,
       custom_prompt: generatePlanDto.custom_prompt,
+      // Include user's country code for location-based meal preferences if enabled
+      location: generatePlanDto.prefer_local_meals && user.country 
+        ? user.country 
+        : undefined,
     };
 
     if (generatePlanDto.include_history) {
