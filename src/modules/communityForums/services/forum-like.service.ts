@@ -40,7 +40,6 @@ export class ForumLikeService {
       throw new BadRequestException('Cannot like both thread and reply at the same time');
     }
 
-    // Validate thread or reply exists
     let thread: ForumThread | null = null;
     let reply: ForumReply | null = null;
 
@@ -61,7 +60,6 @@ export class ForumLikeService {
       }
     }
 
-    // Check if like already exists
     const existingLike = await this.forumLikeRepo.findOne({
       where: {
         user_id: userId,
@@ -73,11 +71,9 @@ export class ForumLikeService {
     let action: 'liked' | 'unliked';
 
     if (existingLike) {
-      // Unlike
       await this.forumLikeRepo.remove(existingLike);
       action = 'unliked';
     } else {
-      // Like
       const like = this.forumLikeRepo.create({
         user_id: userId,
         thread_id: dto.thread_id || undefined,
@@ -86,7 +82,6 @@ export class ForumLikeService {
       await this.forumLikeRepo.save(like);
       action = 'liked';
 
-      // Send notification when liked (not unliked)
       if (thread && thread.user_id !== userId) {
         await this.notificationsService.notifyForumLike(
           thread.user_id,
@@ -106,7 +101,6 @@ export class ForumLikeService {
       }
     }
 
-    // Get updated likes count
     const likeCount = await this.getLikesCount(dto.thread_id, dto.reply_id);
 
     return {

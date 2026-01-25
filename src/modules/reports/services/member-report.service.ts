@@ -37,9 +37,6 @@ export class MemberReportService {
     private workoutExerciseRepository: Repository<WorkoutExercise>,
   ) {}
 
-  /**
-   * Generate member progress report
-   */
   async generateReport(
     userId: number,
     dto: GenerateReportDto,
@@ -47,11 +44,9 @@ export class MemberReportService {
     try {
       this.logger.log(`Starting report generation for user ${userId}, period: ${dto.period}`);
 
-      // Get date range
       const { startDate, endDate } = this.calculateDateRange(dto);
       this.logger.log(`Date range: ${startDate} to ${endDate}`);
 
-      // Fetch user and member details
       const user = await this.userRepository.findOne({
         where: { id: userId },
         relations: ['memberDetail'],
@@ -69,7 +64,6 @@ export class MemberReportService {
 
       this.logger.log(`User found: ${user.name} (${user.email})`);
 
-      // Fetch accepted plan if specified
       let acceptedPlan: AcceptedPlan | null = null;
       if (dto.acceptedPlanId) {
         acceptedPlan = await this.acceptedPlanRepository.findOne({
@@ -82,7 +76,6 @@ export class MemberReportService {
         }
         this.logger.log(`Using specified plan: ${acceptedPlan.plan_name}`);
       } else {
-        // Get the most recent active/completed plan within date range
         acceptedPlan = await this.acceptedPlanRepository.findOne({
           where: [
             {
@@ -100,7 +93,6 @@ export class MemberReportService {
         }
       }
 
-      // Fetch daily progress data
       this.logger.log('Fetching daily progress data...');
       const dailyProgressData = await this.dailyProgressRepository.find({
         where: {
@@ -112,7 +104,6 @@ export class MemberReportService {
       });
       this.logger.log(`Found ${dailyProgressData.length} days of progress data`);
 
-      // Fetch bookings in date range
       this.logger.log('Fetching bookings...');
       const bookings = await this.bookingRepository
         .createQueryBuilder('booking')
@@ -126,7 +117,6 @@ export class MemberReportService {
         .getMany();
       this.logger.log(`Found ${bookings.length} bookings`);
 
-      // Build report
       this.logger.log('Building report...');
       const report: MemberProgressReport = {
         reportPeriod: dto.period,
@@ -151,12 +141,10 @@ export class MemberReportService {
         },
       };
 
-      // Add weekly comparison for monthly reports
       if (dto.period === ReportPeriod.MONTHLY) {
         report.weeklyComparison = this.buildWeeklyComparison(dailyProgressData);
       }
 
-      // Calculate summary
       report.summary = this.calculateSummary(report);
 
       this.logger.log('Report generated successfully');
@@ -167,9 +155,6 @@ export class MemberReportService {
     }
   }
 
-  /**
-   * Calculate date range based on period
-   */
   private calculateDateRange(dto: GenerateReportDto): {
     startDate: string;
     endDate: string;
@@ -181,12 +166,10 @@ export class MemberReportService {
       startDate = new Date(dto.startDate);
       endDate = new Date(dto.endDate);
     } else if (dto.period === ReportPeriod.WEEKLY) {
-      // Last 7 days
       endDate = new Date();
       startDate = new Date();
       startDate.setDate(startDate.getDate() - 6);
     } else {
-      // Last 30 days
       endDate = new Date();
       startDate = new Date();
       startDate.setDate(startDate.getDate() - 29);
@@ -198,9 +181,6 @@ export class MemberReportService {
     };
   }
 
-  /**
-   * Build member info
-   */
   private buildMemberInfo(user: User): MemberProgressReport['memberInfo'] {
     const memberDetail = user.memberDetail;
     return {
@@ -215,9 +195,6 @@ export class MemberReportService {
     };
   }
 
-  /**
-   * Build plan info
-   */
   private buildPlanInfo(
     plan: AcceptedPlan | null,
   ): MemberProgressReport['planInfo'] {
@@ -233,7 +210,6 @@ export class MemberReportService {
       };
     }
 
-    // Convert dates to Date objects if they're strings
     const planStartDate = typeof plan.start_date === 'string' 
       ? new Date(plan.start_date) 
       : plan.start_date;
@@ -252,9 +228,6 @@ export class MemberReportService {
     };
   }
 
-  /**
-   * Calculate weight progress
-   */
   private calculateWeightProgress(
     dailyProgressData: DailyProgress[],
     plan: AcceptedPlan | null,
@@ -280,7 +253,6 @@ export class MemberReportService {
 
     if (startWeight !== null && currentWeight !== null) {
       weightChange = currentWeight - startWeight;
-      // Round to 2 decimal places to avoid floating point precision issues
       weightChange = Math.round(weightChange * 100) / 100;
     }
 
@@ -289,8 +261,6 @@ export class MemberReportService {
       const currentChange = currentWeight - startWeight;
       progressToTarget =
         totalChangeNeeded !== 0 ? (currentChange / totalChangeNeeded) * 100 : 0;
-      
-      // Round to 2 decimal places to avoid floating point precision issues
       progressToTarget = Math.round(progressToTarget * 100) / 100;
     }
 
@@ -303,9 +273,6 @@ export class MemberReportService {
     };
   }
 
-  /**
-   * Calculate workout stats
-   */
   private async calculateWorkoutStats(
     dailyProgressData: DailyProgress[],
   ): Promise<MemberProgressReport['workoutStats']> {
@@ -324,7 +291,6 @@ export class MemberReportService {
     const adherenceRate =
       totalExercises > 0 ? (completedExercises / totalExercises) * 100 : 0;
 
-    // Get most frequent exercises
     const exerciseCounts: { [key: number]: number } = {};
     for (const wp of allWorkoutProgress.filter((wp) => wp.status === 'completed')) {
       const exerciseId = wp.workoutExercise?.id;
@@ -360,9 +326,6 @@ export class MemberReportService {
     };
   }
 
-  /**
-   * Calculate meal stats
-   */
   private calculateMealStats(
     dailyProgressData: DailyProgress[],
   ): MemberProgressReport['mealStats'] {
@@ -393,9 +356,6 @@ export class MemberReportService {
     };
   }
 
-  /**
-   * Calculate wellness metrics
-   */
   private calculateWellnessMetrics(
     dailyProgressData: DailyProgress[],
   ): MemberProgressReport['wellnessMetrics'] {
@@ -459,9 +419,6 @@ export class MemberReportService {
     };
   }
 
-  /**
-   * Calculate booking stats
-   */
   private calculateBookingStats(
     bookings: Booking[],
   ): MemberProgressReport['bookingStats'] {
@@ -484,9 +441,6 @@ export class MemberReportService {
     };
   }
 
-  /**
-   * Build daily breakdown
-   */
   private buildDailyBreakdown(
     dailyProgressData: DailyProgress[],
   ): MemberProgressReport['dailyBreakdown'] {
@@ -526,9 +480,6 @@ export class MemberReportService {
     });
   }
 
-  /**
-   * Build weekly comparison for monthly reports
-   */
   private buildWeeklyComparison(
     dailyProgressData: DailyProgress[],
   ): MemberProgressReport['weeklyComparison'] {
@@ -613,15 +564,11 @@ export class MemberReportService {
     });
   }
 
-  /**
-   * Calculate summary and insights
-   */
   private calculateSummary(
     report: MemberProgressReport,
   ): MemberProgressReport['summary'] {
     const totalDaysTracked = report.dailyBreakdown.length;
 
-    // Calculate consistency score (0-100)
     const workoutScore = report.workoutStats.adherenceRate;
     const mealScore = report.mealStats.adherenceRate;
     const wellnessScore =
@@ -632,7 +579,6 @@ export class MemberReportService {
     const consistencyScore =
       Math.round(((workoutScore + mealScore + wellnessScore) / 3) * 100) / 100;
 
-    // Determine overall progress
     let overallProgress = 'Good';
     if (consistencyScore >= 80) {
       overallProgress = 'Excellent';
@@ -644,7 +590,6 @@ export class MemberReportService {
       overallProgress = 'Needs Improvement';
     }
 
-    // Identify strengths
     const strengths: string[] = [];
     if (report.workoutStats.adherenceRate >= 80) {
       strengths.push('Excellent workout consistency');
@@ -662,7 +607,6 @@ export class MemberReportService {
       strengths.push('Positive weight progress toward goal');
     }
 
-    // Identify areas for improvement
     const areasForImprovement: string[] = [];
     if (report.workoutStats.adherenceRate < 60) {
       areasForImprovement.push('Increase workout consistency');
@@ -699,9 +643,6 @@ export class MemberReportService {
     };
   }
 
-  /**
-   * Get most common value from array
-   */
   private getMostCommon(arr: any[]): string | null {
     if (arr.length === 0) return null;
 

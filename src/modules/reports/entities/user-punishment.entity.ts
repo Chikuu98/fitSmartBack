@@ -46,12 +46,10 @@ export class UserPunishment {
   @Column({ type: 'text', nullable: true, comment: 'Additional notes from admin' })
   admin_notes: string;
 
-  // Admin who issued the punishment
   @ManyToOne(() => User)
   @JoinColumn({ name: 'issued_by_id' })
   issued_by: User;
 
-  // Reference to the report that led to this punishment (if applicable)
   @Column({ type: 'int', nullable: true })
   related_report_id: number;
 
@@ -64,7 +62,6 @@ export class UserPunishment {
   @Column({ type: 'timestamp', nullable: true, comment: 'When the punishment was lifted or expired' })
   ended_at: Date;
 
-  // Admin who lifted the punishment
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'lifted_by_id' })
   lifted_by: User;

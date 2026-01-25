@@ -26,7 +26,6 @@ export class CreateUserPunishmentsTable20250725132100 implements MigrationInterf
       )
     `);
 
-    // Create indexes
     await queryRunner.query(`CREATE INDEX IDX_punishment_user ON user_punishments(user_id)`);
     await queryRunner.query(`CREATE INDEX IDX_punishment_status ON user_punishments(is_active)`);
     await queryRunner.query(`CREATE INDEX IDX_punishment_expires ON user_punishments(expires_at)`);

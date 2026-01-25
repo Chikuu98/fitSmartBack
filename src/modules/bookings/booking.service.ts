@@ -58,7 +58,6 @@ export class BookingService {
     unpaidPayment.currency = 'USD';
     await this.bookingPaymentRepo.save(unpaidPayment);
 
-    // Notify mentor about new booking request
     await this.notificationsService.notifyNewBookingRequest(
       slot.mentor.id,
       member.name,
@@ -141,7 +140,6 @@ export class BookingService {
     await this.slotRepo.save(slot);
     await this.bookingRepo.save(booking);
 
-    // Notify member that booking is accepted
     await this.notificationsService.notifyBookingAccepted(
       booking.member.id,
       slot.mentor.name,
@@ -161,7 +159,6 @@ export class BookingService {
     booking.status = BookingStatus.CANCELLED;
     await this.bookingRepo.save(booking);
 
-    // Determine who cancelled and notify the other party
     if (cancelledByUserId) {
       const isCancelledByMember = booking.member.id === cancelledByUserId;
       const userToNotify = isCancelledByMember

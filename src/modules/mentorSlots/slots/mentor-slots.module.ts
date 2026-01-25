@@ -1,5 +1,3 @@
-// src/core/mentor-slots/mentor-slots.module.ts
-
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MentorTimeSlot } from './mentor_time_slot.entity';

@@ -187,12 +187,12 @@ export class PlansController {
           workoutPlan: {
             name: '4-Week Weight Loss Workout',
             description: '...',
-            weeks: [/* workout weeks */]
+            weeks: []
           },
           mealPlan: {
             name: 'Balanced Weight Loss Meals',
             description: '...',
-            weeks: [/* meal weeks */]
+            weeks: []
           }
         },
         created_at: '2025-07-10T10:00:00Z'
@@ -219,13 +219,13 @@ export class PlansController {
     schema: {
       example: {
         id: 1,
-        generatedPlan: { /* generated plan data */ },
+        generatedPlan: {},
         plan_name: 'My Summer Fitness Plan',
         start_date: '2025-07-10',
         end_date: '2025-08-07',
         status: 'active',
-        workoutPlan: { /* workout plan details */ },
-        mealPlan: { /* meal plan details */ },
+        workoutPlan: {},
+        mealPlan: {},
         progress_summary: {
           totalDays: 28,
           completedDays: 7,

@@ -161,8 +161,8 @@ export class ProgressController {
           energy_level: 'high',
           mood: 'good',
           overall_satisfaction: 8,
-          workoutProgress: [/* workout progress entries */],
-          mealProgress: [/* meal progress entries */]
+          workoutProgress: [],
+          mealProgress: []
         }
       ]
     }

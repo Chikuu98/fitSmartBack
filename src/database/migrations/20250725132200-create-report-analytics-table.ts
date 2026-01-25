@@ -21,7 +21,6 @@ export class CreateReportAnalyticsTable20250725132200 implements MigrationInterf
       )
     `);
 
-    // Create indexes
     await queryRunner.query(`CREATE INDEX IDX_analytics_user ON report_analytics(user_id)`);
     await queryRunner.query(`CREATE INDEX IDX_analytics_date ON report_analytics(created_at)`);
   }

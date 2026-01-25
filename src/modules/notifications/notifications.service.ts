@@ -18,9 +18,6 @@ export class NotificationsService {
     this.logger.setContext('NotificationsService');
   }
 
-  /**
-   * Create a notification for a user
-   */
   async create(dto: CreateNotificationDto): Promise<Notification | null> {
     const user = await this.userRepository.findOne({ where: { id: dto.userId } });
     if (!user) {
@@ -44,9 +41,6 @@ export class NotificationsService {
     return saved as Notification;
   }
 
-  /**
-   * Create notification for booking accepted
-   */
   async notifyBookingAccepted(
     memberId: number,
     mentorName: string,
@@ -63,9 +57,6 @@ export class NotificationsService {
     });
   }
 
-  /**
-   * Create notification for booking cancelled
-   */
   async notifyBookingCancelled(
     userId: number,
     cancelledBy: string,
@@ -81,9 +72,6 @@ export class NotificationsService {
     });
   }
 
-  /**
-   * Create notification for new booking request (mentor receives)
-   */
   async notifyNewBookingRequest(
     mentorId: number,
     memberName: string,
@@ -99,9 +87,6 @@ export class NotificationsService {
     });
   }
 
-  /**
-   * Create notification for forum reply
-   */
   async notifyForumReply(
     threadOwnerId: number,
     replierName: string,
@@ -118,9 +103,6 @@ export class NotificationsService {
     });
   }
 
-  /**
-   * Create notification for forum like
-   */
   async notifyForumLike(
     contentOwnerId: number,
     likerName: string,
@@ -138,9 +120,6 @@ export class NotificationsService {
     });
   }
 
-  /**
-   * Create notification for plan generated
-   */
   async notifyPlanGenerated(
     userId: number,
     planId: number,
@@ -156,9 +135,6 @@ export class NotificationsService {
     });
   }
 
-  /**
-   * Create notification for new rating received (mentor)
-   */
   async notifyNewRating(
     mentorId: number,
     memberName: string,
@@ -175,9 +151,6 @@ export class NotificationsService {
     });
   }
 
-  /**
-   * Get all notifications for a user
-   */
   async findByUser(userId: number, page = 1, limit = 20) {
     const [notifications, total] = await this.notificationRepository.findAndCount({
       where: { user: { id: userId } },
@@ -197,18 +170,12 @@ export class NotificationsService {
     };
   }
 
-  /**
-   * Get unread notification count for a user
-   */
   async getUnreadCount(userId: number): Promise<number> {
     return this.notificationRepository.count({
       where: { user: { id: userId }, is_read: false },
     });
   }
 
-  /**
-   * Mark a single notification as read
-   */
   async markAsRead(notificationId: number, userId: number) {
     const notification = await this.notificationRepository.findOne({
       where: { id: notificationId, user: { id: userId } },
@@ -225,9 +192,6 @@ export class NotificationsService {
     return { success: true, message: 'Notification marked as read', noToast: true };
   }
 
-  /**
-   * Mark all notifications as read for a user
-   */
   async markAllAsRead(userId: number) {
     await this.notificationRepository.update(
       { user: { id: userId }, is_read: false },
@@ -237,9 +201,6 @@ export class NotificationsService {
     return { success: true, message: 'All notifications marked as read', noToast: true };
   }
 
-  /**
-   * Delete a notification
-   */
   async delete(notificationId: number, userId: number) {
     const notification = await this.notificationRepository.findOne({
       where: { id: notificationId, user: { id: userId } },
@@ -253,9 +214,6 @@ export class NotificationsService {
     return { success: true, message: 'Notification deleted', noToast: true };
   }
 
-  /**
-   * Delete all read notifications older than specified days
-   */
   async cleanupOldNotifications(daysOld = 30) {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - daysOld);

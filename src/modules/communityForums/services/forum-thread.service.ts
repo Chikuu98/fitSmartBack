@@ -51,7 +51,6 @@ export class ForumThreadService {
 
     const savedThread = await this.forumThreadRepo.save(thread);
 
-    // Handle tags
     if (dto.tag_ids && dto.tag_ids.length > 0) {
       const tags = await this.forumTagRepo.findByIds(dto.tag_ids);
       if (!savedThread.tags) {
@@ -61,13 +60,11 @@ export class ForumThreadService {
       await this.forumThreadRepo.save(savedThread);
     }
 
-    // Fetch the complete thread with all relations
     const completeThread = await this.forumThreadRepo.findOne({
       where: { id: savedThread.id },
       relations: ['user', 'forumType', 'tags', 'likes', 'replies']
     });
 
-    // Add computed fields for like count and reply count
     const threadWithCounts = completeThread ? {
       ...completeThread,
       likeCount: completeThread.likes ? completeThread.likes.length : 0,
@@ -104,7 +101,6 @@ export class ForumThreadService {
 
     const [data, total] = await queryBuilder.getManyAndCount();
 
-    // Add computed fields for like count, reply count and current user like status
     const threadsWithCounts = data.map(thread => ({
       ...thread,
       likeCount: thread.likes ? thread.likes.length : 0,
@@ -144,7 +140,6 @@ export class ForumThreadService {
       throw new NotFoundException('Forum thread not found');
     }
 
-    // Add computed fields for like count, reply count and current user like status
     const threadWithCounts = {
       ...thread,
       likeCount: thread.likes ? thread.likes.length : 0,
@@ -170,7 +165,6 @@ export class ForumThreadService {
       take: limit,
     });
 
-    // Add computed count fields for each thread
     const threadsWithCounts = data.map(thread => ({
       ...thread,
       likeCount: thread.likes ? thread.likes.length : 0,
@@ -211,7 +205,6 @@ export class ForumThreadService {
       forum_id: dto.forum_id ?? thread.forum_id,
     });
 
-    // Handle tags update
     if (dto.tag_ids) {
       const tags = await this.forumTagRepo.findByIds(dto.tag_ids);
       thread.tags = tags;
@@ -257,7 +250,6 @@ export class ForumThreadService {
 
     const [data, total] = await queryBuilder.getManyAndCount();
 
-    // Add computed fields for like count, reply count and current user like status
     const threadsWithCounts = data.map(thread => ({
       ...thread,
       likeCount: thread.likes ? thread.likes.length : 0,

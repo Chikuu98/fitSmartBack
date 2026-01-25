@@ -213,50 +213,49 @@ export class GeminiService {
   private buildPrompt(data: PlanGenerationPromptDto): string {
     let prompt = `You are a certified fitness and nutrition expert. Generate a ${data.duration_days}-day workout and meal plan.
 
-USER PROFILE:
-- Goal: ${data.goal}${data.target_weight ? ` (Target: ${data.target_weight}kg)` : ''}
-- Age: ${data.age}, Gender: ${data.gender}, Height: ${data.height}cm, Weight: ${data.weight}kg
-- Fitness Level: ${data.fitness_level}
-- Diet: ${data.dietary_preference}`;
+    USER PROFILE:
+    - Goal: ${data.goal}${data.target_weight ? ` (Target: ${data.target_weight}kg)` : ''}
+    - Age: ${data.age}, Gender: ${data.gender}, Height: ${data.height}cm, Weight: ${data.weight}kg
+    - Fitness Level: ${data.fitness_level}
+    - Diet: ${data.dietary_preference}`;
 
     if (data.previous_plan_performance) {
-      prompt += `\n\nPREVIOUS PERFORMANCE:
-- Completion: ${data.previous_plan_performance.completion_rate || 'N/A'}%
-- Favorites: ${data.previous_plan_performance.favorite_workouts || 'N/A'}
-- Dislikes: ${data.previous_plan_performance.disliked_elements || 'N/A'}
-- Weight Change: ${data.previous_plan_performance.weight_change || 'N/A'}kg
+    prompt += `\n\nPREVIOUS PERFORMANCE:
+    - Completion: ${data.previous_plan_performance.completion_rate || 'N/A'}%
+    - Favorites: ${data.previous_plan_performance.favorite_workouts || 'N/A'}
+    - Dislikes: ${data.previous_plan_performance.disliked_elements || 'N/A'}
+    - Weight Change: ${data.previous_plan_performance.weight_change || 'N/A'}kg
 
-Adjust based on this feedback.`;
+    Adjust based on this feedback.`;
     }
 
     if (data.user_preferences) {
-      prompt += `\n\nPREFERENCES:
-- Duration: ${data.user_preferences.optimal_workout_duration || 'N/A'} min
-- Types: ${data.user_preferences.preferred_workout_types || 'N/A'}
-- Difficulty: ${data.user_preferences.difficulty_preference || 'N/A'}`;
+    prompt += `\n\nPREFERENCES:
+    - Duration: ${data.user_preferences.optimal_workout_duration || 'N/A'} min
+    - Types: ${data.user_preferences.preferred_workout_types || 'N/A'}
+    - Difficulty: ${data.user_preferences.difficulty_preference || 'N/A'}`;
     }
 
     const targetCalories = this.calculateTargetCalories(data);
 
     prompt += `\n\nREQUIREMENTS:
-- ${data.duration_days} days of workouts (variety, progressive difficulty, all muscle groups)
-- ${data.duration_days} days of meals (${targetCalories} kcal/day, respects ${data.dietary_preference})
-- Keep descriptions concise
-- Include essential nutritional info (calories, protein, carbs, fats)
-- Practical exercises and meals`;
+    - ${data.duration_days} days of workouts (variety, progressive difficulty, all muscle groups)
+    - ${data.duration_days} days of meals (${targetCalories} kcal/day, respects ${data.dietary_preference})
+    - Keep descriptions concise
+    - Include essential nutritional info (calories, protein, carbs, fats)
+    - Practical exercises and meals`;
 
-    // Add location-based meal preferences if user opted in
     if (data.location) {
-      prompt += `\n\nLOCATION-BASED PREFERENCES:
-- User is from ${data.location}
-- Include traditional and locally popular dishes from ${data.location} in meal plans
-- Use ingredients commonly available in ${data.location}
-- Adapt recipes to match ${data.location} cuisine style while meeting nutritional requirements`;
+    prompt += `\n\nLOCATION-BASED PREFERENCES:
+    - User is from ${data.location}
+    - Include traditional and locally popular dishes from ${data.location} in meal plans
+    - Use ingredients commonly available in ${data.location}
+    - Adapt recipes to match ${data.location} cuisine style while meeting nutritional requirements`;
     }
 
     if (data.custom_prompt && data.custom_prompt.trim()) {
-      prompt += `\n\nADDITIONAL INSTRUCTIONS:
-${data.custom_prompt.trim()}`;
+    prompt += `\n\nADDITIONAL INSTRUCTIONS:
+    ${data.custom_prompt.trim()}`;
     }
 
     return prompt;

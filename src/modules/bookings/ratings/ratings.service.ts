@@ -29,7 +29,6 @@ export class RatingsService {
   async create(createRatingDto: CreateRatingDto, memberId: number) {
     const { bookingId, rating, review } = createRatingDto;
 
-    // Check if booking exists and is completed
     const booking = await this.bookingRepository.findOne({
       where: { id: bookingId },
       relations: ['member', 'mentorSlot', 'mentorSlot.mentor'],
@@ -39,21 +38,18 @@ export class RatingsService {
       throw new NotFoundException('Booking not found');
     }
 
-    // Verify the booking belongs to the member
     if (booking.member.id !== memberId) {
       throw new ForbiddenException(
         'You can only rate your own booking sessions',
       );
     }
 
-    // Check if booking is completed
     if (booking.status !== BookingStatus.COMPLETED) {
       throw new BadRequestException(
         'You can only rate completed booking sessions',
       );
     }
 
-    // Check if rating already exists
     const existingRating = await this.ratingRepository.findOne({
       where: { booking: { id: bookingId } },
     });
@@ -64,7 +60,6 @@ export class RatingsService {
       );
     }
 
-    // Create the rating
     const newRating = this.ratingRepository.create({
       booking,
       member: booking.member,
@@ -78,7 +73,6 @@ export class RatingsService {
       `Rating created for booking ${bookingId} by member ${memberId}`,
     );
 
-    // Notify mentor about the new rating
     await this.notificationsService.notifyNewRating(
       booking.mentorSlot.mentor.id,
       booking.member.name,
@@ -107,12 +101,10 @@ export class RatingsService {
       throw new NotFoundException('Rating not found');
     }
 
-    // Verify the rating belongs to the member
     if (rating.member.id !== memberId) {
       throw new ForbiddenException('You can only update your own ratings');
     }
 
-    // Update rating
     Object.assign(rating, updateRatingDto);
     const updatedRating = await this.ratingRepository.save(rating);
 
@@ -194,7 +186,6 @@ export class RatingsService {
       throw new NotFoundException('Rating not found');
     }
 
-    // Verify the rating belongs to the member
     if (rating.member.id !== memberId) {
       throw new ForbiddenException('You can only delete your own ratings');
     }

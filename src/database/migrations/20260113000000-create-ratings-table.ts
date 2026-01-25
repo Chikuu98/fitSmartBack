@@ -78,7 +78,6 @@ export class CreateRatingsTable20260113000000 implements MigrationInterface {
       }),
     ]);
 
-    // Create index for better query performance
     await queryRunner.query(
       `CREATE INDEX idx_ratings_mentor_id ON ratings(mentor_id)`,
     );

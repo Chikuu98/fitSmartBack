@@ -97,7 +97,6 @@ export interface MemberProgressReport {
   
   dailyBreakdown: DailyBreakdown[];
   
-  // Only for monthly reports
   weeklyComparison?: WeeklyComparison[];
   
   summary: {

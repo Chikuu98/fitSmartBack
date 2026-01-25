@@ -7,14 +7,12 @@ import { ForumTag } from './entities/forum-tag.entity';
 import { ForumLike } from './entities/forum-like.entity';
 import { User } from '@/core/users/user.entity';
 
-// Services
 import { ForumTypeService } from './services/forum-type.service';
 import { ForumTagService } from './services/forum-tag.service';
 import { ForumThreadService } from './services/forum-thread.service';
 import { ForumReplyService } from './services/forum-reply.service';
 import { ForumLikeService } from './services/forum-like.service';
 
-// Controllers
 import { ForumTypeController } from './controllers/forum-type.controller';
 import { ForumTagController } from './controllers/forum-tag.controller';
 import { ForumThreadController } from './controllers/forum-thread.controller';
