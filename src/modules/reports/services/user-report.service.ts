@@ -33,7 +33,6 @@ export class UserReportService {
   }
 
   async create(dto: CreateUserReportDto, reporterId: number): Promise<any> {
-    // Fetch reporter
     const reporter = await this.userRepo.findOne({ where: { id: reporterId } });
     if (!reporter) {
       throw new NotFoundException('Reporter user not found');
@@ -41,7 +40,6 @@ export class UserReportService {
 
     let reportedUserId: number;
 
-    // Determine reported user based on content type
     if (dto.reported_content_type === ReportedContentType.FORUM_THREAD) {
       const thread = await this.threadRepo.findOne({
         where: { id: dto.reported_content_id },
@@ -65,22 +63,18 @@ export class UserReportService {
 
       reportedUserId = reply.user_id;
     } else {
-      // USER_PROFILE - content_id is the user_id
       reportedUserId = dto.reported_content_id;
     }
 
-    // Prevent self-reporting
     if (reporterId === reportedUserId) {
       throw new BadRequestException('You cannot report your own content');
     }
 
-    // Fetch reported user
     const reportedUser = await this.userRepo.findOne({ where: { id: reportedUserId } });
     if (!reportedUser) {
       throw new NotFoundException('Reported user not found');
     }
 
-    // Check for duplicate pending reports
     const existingReport = await this.reportRepo.findOne({
       where: {
         reporter,
@@ -94,7 +88,6 @@ export class UserReportService {
       throw new BadRequestException('You have already reported this content and it is under review');
     }
 
-    // Create the report
     const report = this.reportRepo.create({
       reporter,
       reported_user: reportedUser,
@@ -136,7 +129,6 @@ export class UserReportService {
 
     const [reports, total] = await queryBuilder.getManyAndCount();
 
-    // Fetch content details for each report
     const reportsWithContent = await Promise.all(
       reports.map(async (report) => {
         let contentDetails: any = null;
@@ -193,7 +185,6 @@ export class UserReportService {
       throw new NotFoundException('Report not found');
     }
 
-    // Fetch content details
     let contentDetails: any = null;
     if (report.reported_content_type === ReportedContentType.FORUM_THREAD) {
       const thread = await this.threadRepo.findOne({
@@ -234,7 +225,6 @@ export class UserReportService {
       throw new NotFoundException('Admin user not found');
     }
 
-    // Update report
     report.status = dto.status;
     report.review_notes = dto.review_notes ?? '';
     report.reviewed_by = admin;
@@ -268,7 +258,6 @@ export class UserReportService {
 
     const reportedUser = report.reported_user;
 
-    // Create punishment record
     const punishment = this.punishmentRepo.create({
       user: reportedUser,
       punishment_type: dto.punishment_type,
@@ -282,10 +271,8 @@ export class UserReportService {
 
     const savedPunishment = await this.punishmentRepo.save(punishment);
 
-    // Update user status based on punishment type
     await this.updateUserStatus(reportedUser.id, dto.punishment_type, dto.expires_at);
 
-    // Mark report as resolved
     report.status = ReportStatus.RESOLVED;
     report.review_notes = `Punishment applied: ${dto.punishment_type}. ${dto.admin_notes || ''}`;
     report.reviewed_by = admin;
@@ -328,17 +315,14 @@ export class UserReportService {
         break;
 
       case PunishmentType.WARNING:
-        // Warning doesn't change account status
         this.logger.log(`User ${userId} received a warning`);
         break;
 
       case PunishmentType.FORUM_RESTRICTION:
-        // Can be handled with additional logic if needed
         this.logger.log(`User ${userId} restricted from forums`);
         break;
 
       case PunishmentType.CONTENT_REMOVAL:
-        // Content removal doesn't change user status
         this.logger.log(`Content from user ${userId} marked for removal`);
         break;
 
@@ -435,7 +419,6 @@ export class UserReportService {
 
     await this.punishmentRepo.save(punishment);
 
-    // Reactivate user if they have no other active punishments
     const activePunishments = await this.punishmentRepo.count({
       where: {
         user: { id: punishment.user.id },

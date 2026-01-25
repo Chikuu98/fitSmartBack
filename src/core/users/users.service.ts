@@ -181,7 +181,6 @@ export class UsersService {
 
     const mentors = await query.getMany();
 
-    // Add average ratings for each mentor
     const mentorsWithRatings = await this.addAverageRatingsToMentors(mentors);
 
     return {
@@ -190,7 +189,6 @@ export class UsersService {
     };
   }
 
-  // Helper method to calculate and add average ratings to mentors
   private async addAverageRatingsToMentors(mentors: User[]): Promise<any[]> {
     const mentorsWithRatings: any[] = [];
 
@@ -463,7 +461,6 @@ export class UsersService {
 
     const mentors = await query.getMany();
 
-    // Add average ratings for each mentor
     const mentorsWithRatings = await this.addAverageRatingsToMentors(mentors);
 
     return {

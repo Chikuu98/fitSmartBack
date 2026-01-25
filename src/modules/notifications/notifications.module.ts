@@ -6,11 +6,11 @@ import { NotificationsService } from './notifications.service';
 import { NotificationsController } from './notifications.controller';
 import { AppLoggerService } from '@/common/services/app-logger.service';
 
-@Global() // Make this module globally available for easy injection
+@Global()
 @Module({
   imports: [TypeOrmModule.forFeature([Notification, User])],
   providers: [NotificationsService, AppLoggerService],
   controllers: [NotificationsController],
-  exports: [NotificationsService], // Export service for use in other modules
+  exports: [NotificationsService],
 })
 export class NotificationsModule {}

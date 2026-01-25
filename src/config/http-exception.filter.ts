@@ -30,7 +30,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
         message = err.message || message;
 
-        // ✅ Preserve validation errors
         if (err.validation_errors) {
           validationErrors = err.validation_errors;
         }

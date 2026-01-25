@@ -25,14 +25,10 @@ export class AnalyticsService {
     private feedbackRepository: Repository<PlanFeedback>,
   ) {}
 
-  /**
-   * Generate and store analytics for a completed plan
-   */
   async generatePlanAnalytics(
     userId: number,
     acceptedPlanId: number,
   ): Promise<PlanAnalytics> {
-    // Validate accepted plan exists and belongs to user
     const acceptedPlan = await this.acceptedPlanRepository.findOne({
       where: { id: acceptedPlanId },
       relations: ['user', 'generatedPlan', 'generatedPlan.planType'],
@@ -42,7 +38,6 @@ export class AnalyticsService {
       throw new NotFoundException('Accepted plan not found');
     }
 
-    // Check if analytics already exist
     let analytics = await this.analyticsRepository.findOne({
       where: { acceptedPlan: { id: acceptedPlanId } },
     });
@@ -50,10 +45,8 @@ export class AnalyticsService {
     const analyticsData = await this.calculateAnalytics(acceptedPlanId);
 
     if (analytics) {
-      // Update existing analytics
       Object.assign(analytics, analyticsData);
     } else {
-      // Create new analytics
       analytics = this.analyticsRepository.create({
         acceptedPlan: { id: acceptedPlanId },
         ...analyticsData,
@@ -63,25 +56,19 @@ export class AnalyticsService {
     return this.analyticsRepository.save(analytics);
   }
 
-  /**
-   * Calculate comprehensive analytics for a plan
-   */
   private async calculateAnalytics(acceptedPlanId: number): Promise<Partial<PlanAnalytics>> {
-    // Get all daily progress entries
     const progressEntries = await this.dailyProgressRepository.find({
       where: { acceptedPlan: { id: acceptedPlanId } },
       relations: ['workoutProgress', 'mealProgress'],
       order: { progress_date: 'ASC' },
     });
 
-    // Get plan feedback
     const feedback = await this.feedbackRepository.findOne({
       where: { acceptedPlan: { id: acceptedPlanId } },
     });
 
     const totalDays = progressEntries.length;
 
-    // Calculate completion rates
     const allWorkoutProgress = progressEntries.flatMap(p => p.workoutProgress || []);
     const completedWorkouts = allWorkoutProgress.filter(w => w.status === 'completed').length;
     const workout_completion_rate = allWorkoutProgress.length > 0 
@@ -96,28 +83,23 @@ export class AnalyticsService {
       ? (consumedMeals / allMealProgress.length) * 100 
       : 0;
 
-    // Overall completion rate (average of workout and meal completion)
     const completion_rate = (workout_completion_rate + meal_completion_rate) / 2;
 
-    // Calculate weight change
     const weightsEntries = progressEntries.filter(p => p.current_weight);
     const weight_change_kg = weightsEntries.length > 1 
       ? weightsEntries[weightsEntries.length - 1].current_weight - weightsEntries[0].current_weight
       : undefined;
 
-    // Calculate consistency score based on daily logging
     const activeDays = progressEntries.filter(p => 
       p.overall_satisfaction && p.overall_satisfaction >= 5
     ).length;
     const consistency_score = totalDays > 0 ? (activeDays / totalDays) * 100 : 0;
 
-    // Calculate engagement score based on activity logging
     const engagedEntries = progressEntries.filter(p => 
       p.workoutProgress?.length > 0 || p.mealProgress?.length > 0
     ).length;
     const engagement_score = totalDays > 0 ? (engagedEntries / totalDays) * 100 : 0;
 
-    // Determine improvement trend
     const first_week = progressEntries.slice(0, 7);
     const last_week = progressEntries.slice(-7);
     
@@ -151,14 +133,10 @@ export class AnalyticsService {
     };
   }
 
-  /**
-   * Get analytics for a specific plan
-   */
   async getPlanAnalytics(
     userId: number,
     acceptedPlanId: number,
   ): Promise<PlanAnalytics | null> {
-    // First check if the accepted plan belongs to the user
     const acceptedPlan = await this.acceptedPlanRepository.findOne({
       where: { id: acceptedPlanId },
       relations: ['user'],
@@ -174,9 +152,6 @@ export class AnalyticsService {
     });
   }
 
-  /**
-   * Get all analytics for a user (via accepted plans)
-   */
   async getUserAnalytics(userId: number): Promise<PlanAnalytics[]> {
     const userAcceptedPlans = await this.acceptedPlanRepository.find({
       where: { user: { id: userId } },
@@ -193,9 +168,6 @@ export class AnalyticsService {
     return analytics.sort((a, b) => b.calculated_at.getTime() - a.calculated_at.getTime());
   }
 
-  /**
-   * Get simplified analytics summary
-   */
   async getUserAnalyticsSummary(userId: number): Promise<{
     totalPlans: number;
     averageCompletion: number;
@@ -248,11 +220,7 @@ export class AnalyticsService {
     };
   }
 
-  /**
-   * Delete analytics (when plan is deleted)
-   */
   async deleteAnalytics(userId: number, acceptedPlanId: number): Promise<void> {
-    // First check if the accepted plan belongs to the user
     const acceptedPlan = await this.acceptedPlanRepository.findOne({
       where: { id: acceptedPlanId },
       relations: ['user'],

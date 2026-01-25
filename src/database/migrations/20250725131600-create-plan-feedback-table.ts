@@ -2,7 +2,6 @@ import { MigrationInterface, QueryRunner, Table } from 'typeorm';
 
 export class CreatePlanFeedbackTable20250725131600 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // Create plan_feedback table
     await queryRunner.createTable(
       new Table({
         name: 'plan_feedback',

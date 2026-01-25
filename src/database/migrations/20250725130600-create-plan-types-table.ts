@@ -34,7 +34,6 @@ export class CreatePlanTypesTable20250725130600 implements MigrationInterface {
       true,
     );
 
-    // Insert default plan types
     await queryRunner.query(`
       INSERT INTO plan_types (name, description) VALUES 
       ('workout', 'Physical exercise and fitness plans'),

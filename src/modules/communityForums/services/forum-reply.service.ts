@@ -54,7 +54,6 @@ export class ForumReplyService {
 
     const savedReply = await this.forumReplyRepo.save(reply);
     
-    // Fetch the complete reply with relations
     const completeReply = await this.forumReplyRepo.findOne({
       where: { id: savedReply.id },
       relations: ['user', 'likes'],
@@ -64,7 +63,6 @@ export class ForumReplyService {
       throw new NotFoundException('Created reply not found');
     }
 
-    // Notify thread owner if the replier is not the thread owner
     if (thread.user_id !== userId) {
       await this.notificationsService.notifyForumReply(
         thread.user_id,
@@ -74,7 +72,6 @@ export class ForumReplyService {
       );
     }
 
-    // Add computed count fields
     const replyWithCounts = {
       ...completeReply,
       likeCount: completeReply.likes ? completeReply.likes.length : 0,
@@ -97,7 +94,6 @@ export class ForumReplyService {
       take: limit,
     });
 
-    // Add computed count fields for each reply
     const repliesWithCounts = data.map(reply => ({
       ...reply,
       likeCount: reply.likes ? reply.likes.length : 0,
@@ -133,7 +129,6 @@ export class ForumReplyService {
       throw new NotFoundException('Forum reply not found');
     }
 
-    // Add computed count fields
     const replyWithCounts = {
       ...reply,
       likeCount: reply.likes ? reply.likes.length : 0,
@@ -153,7 +148,6 @@ export class ForumReplyService {
 
     const skip = (page - 1) * limit;
 
-    // Get top-level replies (no parent) with nested children
     const [data, total] = await this.forumReplyRepo.findAndCount({
       where: { thread_id: threadId, parent_id: IsNull() },
       relations: [
@@ -174,7 +168,6 @@ export class ForumReplyService {
       take: limit,
     });
 
-    // Recursively add computed count fields to all nested replies
     const addCountsToReply = (reply: any): any => {
       const replyWithCounts = {
         ...reply,
@@ -212,7 +205,6 @@ export class ForumReplyService {
       take: limit,
     });
 
-    // Add computed count fields for each reply
     const repliesWithCounts = data.map(reply => ({
       ...reply,
       likeCount: reply.likes ? reply.likes.length : 0,
@@ -242,8 +234,7 @@ export class ForumReplyService {
     });
 
     const updatedReply = await this.forumReplyRepo.save(replyData);
-    
-    // Fetch the complete updated reply with relations
+
     const completeReply = await this.forumReplyRepo.findOne({
       where: { id: updatedReply.id },
       relations: ['user', 'likes'],
@@ -253,7 +244,6 @@ export class ForumReplyService {
       throw new NotFoundException('Updated reply not found');
     }
 
-    // Add computed count fields
     const replyWithCounts = {
       ...completeReply,
       likeCount: completeReply.likes ? completeReply.likes.length : 0,
@@ -288,23 +278,19 @@ export class ForumReplyService {
       throw new NotFoundException('Forum thread not found');
     }
 
-    // Get all replies for the thread and build the tree structure
     const allReplies = await this.forumReplyRepo.find({
       where: { thread_id: threadId },
       relations: ['user', 'likes', 'likes.user'],
       order: { created_at: 'ASC' },
     });
 
-    // Build the tree structure
     const replyMap = new Map<number, ForumReply & { children: ForumReply[] }>();
     const rootReplies: ForumReply[] = [];
 
-    // First pass: create map of all replies
     allReplies.forEach(reply => {
       replyMap.set(reply.id, { ...reply, children: [] });
     });
 
-    // Second pass: build the tree
     allReplies.forEach(reply => {
       const replyWithChildren = replyMap.get(reply.id)!;
       

@@ -10,7 +10,6 @@ import { WorkoutProgress } from '../plans/entities/workout-progress.entity';
 import { MealProgress } from '../plans/entities/meal-progress.entity';
 import {
   MemberDashboardResponseDto,
-  MemberDashboardData,
   SessionStats,
   ForumStats,
   PlanStats,
@@ -46,7 +45,6 @@ export class DashboardService {
     try {
       this.logger.log(`Fetching dashboard data for user ID: ${userId}`);
 
-      // Fetch all data in parallel for better performance
       const [
         sessionStats,
         forumStats,
@@ -120,7 +118,6 @@ export class DashboardService {
       relations: ['replies', 'likes'],
     });
 
-    // Calculate total replies and likes
     const repliesMade = threads.reduce((sum, thread) => sum + (thread.replies?.length || 0), 0);
     const likesReceived = threads.reduce((sum, thread) => sum + (thread.likes?.length || 0), 0);
 
@@ -128,7 +125,7 @@ export class DashboardService {
       threadsCreated: threads.length,
       repliesMade,
       likesReceived,
-      helpfulVotes: likesReceived, // Using likes as helpful votes
+      helpfulVotes: likesReceived,
     };
   }
 
@@ -155,7 +152,6 @@ export class DashboardService {
       };
     }
 
-    // Get all active plans
     const activePlans = await this.acceptedPlanRepository.find({
       where: {
         user: { id: userId },
@@ -170,7 +166,6 @@ export class DashboardService {
       });
     }
 
-    // If no active plans found, return empty data
     if (activePlans.length === 0) {
       return {
         planStats: {
@@ -186,7 +181,6 @@ export class DashboardService {
       };
     }
 
-    // Get recent activities to help identify plan types
     const recentProgress = await this.dailyProgressRepository.find({
       where: {
         user: { id: userId },
@@ -196,7 +190,6 @@ export class DashboardService {
       take: 10,
     });
 
-    // Check which plans have actual workout/meal progress data
     const planProgressTypes = await Promise.all(
       activePlans.map(async (plan) => {
         const hasWorkoutProgress = await this.workoutProgressRepository.count({
@@ -232,19 +225,14 @@ export class DashboardService {
       hasMeal: p.hasMeal
     }))));
 
-    // Identify workout and meal plans based on actual progress data
-    // A plan can be BOTH if it has both types of progress (combined plan)
     const workoutPlan = planProgressTypes.find(p => p.hasWorkout)?.plan;
     const mealPlan = planProgressTypes.find(p => p.hasMeal)?.plan;
     
-    // Check if it's a combined plan (same plan has both workout and meal)
     const isCombinedPlan = workoutPlan && mealPlan && workoutPlan.id === mealPlan.id;
 
     let finalWorkoutPlan = workoutPlan;
     let finalMealPlan = mealPlan;
 
-    // Fetch progress data for identified plans
-    // For combined plans, calculate workout and meal progress separately
     const workoutProgress = finalWorkoutPlan
       ? await this.calculatePlanProgress(finalWorkoutPlan, user, 'workout')
       : null;
@@ -255,7 +243,6 @@ export class DashboardService {
     this.logger.log(`Workout Plan: ${finalWorkoutPlan ? finalWorkoutPlan.plan_name : 'Not found'}, Meal Plan: ${finalMealPlan ? finalMealPlan.plan_name : 'Not found'}, Combined: ${isCombinedPlan}`);
     this.logger.log(`Workout Progress: ${JSON.stringify(workoutProgress)}, Meal Progress: ${JSON.stringify(mealProgress)}`);
 
-    // Calculate plan stats
     const planStats: PlanStats = {
       activeWorkoutPlan: !!finalWorkoutPlan,
       activeMealPlan: !!finalMealPlan,
@@ -268,7 +255,6 @@ export class DashboardService {
       ),
     };
 
-    // Build active plans data
     const activePlansData: ActivePlanData[] = [];
     if (finalWorkoutPlan && workoutProgress) {
       activePlansData.push({
@@ -295,7 +281,6 @@ export class DashboardService {
       });
     }
 
-    // Get recent activities
     const recentActivities = await this.getRecentActivities(userId, activePlans);
 
     return {
@@ -319,7 +304,6 @@ export class DashboardService {
       order: { progress_date: 'DESC' },
     });
 
-    // Filter days that have the specific progress type
     const relevantDays = dailyProgress.filter(dp => {
       if (progressType === 'workout') {
         return dp.workoutProgress && dp.workoutProgress.length > 0;
@@ -328,7 +312,6 @@ export class DashboardService {
       }
     });
 
-    // Calculate duration from start and end date
     let totalDays = 0;
     if (plan.start_date && plan.end_date) {
       const start = new Date(plan.start_date);
@@ -338,7 +321,6 @@ export class DashboardService {
     const completedDays = relevantDays.length;
     const completionRate = totalDays > 0 ? (completedDays / totalDays) * 100 : 0;
 
-    // Calculate current streak based on relevant progress type
     let currentStreak = 0;
     const sortedProgress = relevantDays.sort(
       (a, b) => new Date(b.progress_date).getTime() - new Date(a.progress_date).getTime(),
@@ -389,11 +371,9 @@ export class DashboardService {
       relations: ['acceptedPlan', 'workoutProgress', 'mealProgress'],
     });
 
-    // Flatten progress into separate workout and meal activities
     const activities: RecentActivity[] = [];
     
     for (const progress of recentProgress) {
-      // Add workout activity if has workout progress
       if (progress.workoutProgress && progress.workoutProgress.length > 0) {
         activities.push({
           id: `workout-${progress.id}`,
@@ -405,7 +385,6 @@ export class DashboardService {
         });
       }
       
-      // Add meal activity if has meal progress
       if (progress.mealProgress && progress.mealProgress.length > 0) {
         activities.push({
           id: `meal-${progress.id}`,
@@ -418,7 +397,6 @@ export class DashboardService {
       }
     }
 
-    // Return most recent 5 activities
     return activities.slice(0, 5);
   }
 

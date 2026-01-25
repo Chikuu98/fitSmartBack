@@ -41,9 +41,6 @@ export class ProgressService {
     private memberDetailRepository: Repository<MemberDetail>,
   ) {}
 
-  /**
-   * Sync weight from progress tracking to user's member details
-   */
   private async syncWeightToUserProfile(userId: number, weight: number): Promise<void> {
     if (!weight || weight <= 0) return;
     
@@ -57,9 +54,6 @@ export class ProgressService {
     }
   }
 
-  /**
-   * Create daily progress entry
-   */
   async createDailyProgress(
     userId: number,
     acceptedPlanId: number,
@@ -102,7 +96,6 @@ export class ProgressService {
 
     const savedProgress = await this.dailyProgressRepository.save(progress);
 
-    // Sync weight to user's member details if provided
     if (dto.current_weight) {
       await this.syncWeightToUserProfile(userId, dto.current_weight);
     }
@@ -110,9 +103,6 @@ export class ProgressService {
     return savedProgress;
   }
 
-  /**
-   * Create workout progress entry
-   */
   async createWorkoutProgress(
     userId: number,
     dailyProgressId: number,
@@ -146,9 +136,6 @@ export class ProgressService {
     return this.workoutProgressRepository.save(workoutProgress);
   }
 
-  /**
-   * Create meal progress entry
-   */
   async createMealProgress(
     userId: number,
     dailyProgressId: number,
@@ -181,9 +168,6 @@ export class ProgressService {
     return this.mealProgressRepository.save(mealProgress);
   }
 
-  /**
-   * Get daily progress for a user's accepted plan
-   */
   async getDailyProgress(
     userId: number,
     acceptedPlanId: number,
@@ -213,9 +197,6 @@ export class ProgressService {
     return query.getMany();
   }
 
-  /**
-   * Get progress summary for a user's accepted plan
-   */
   async getProgressSummary(
     userId: number,
     acceptedPlanId: number,
@@ -289,9 +270,6 @@ export class ProgressService {
     };
   }
 
-  /**
-   * Update daily progress
-   */
   async updateDailyProgress(
     userId: number,
     progressId: number,
@@ -309,7 +287,6 @@ export class ProgressService {
     Object.assign(progress, updates);
     const savedProgress = await this.dailyProgressRepository.save(progress);
 
-    // Sync weight to user's member details if provided
     if (updates.current_weight) {
       await this.syncWeightToUserProfile(userId, updates.current_weight);
     }
@@ -317,9 +294,6 @@ export class ProgressService {
     return savedProgress;
   }
 
-  /**
-   * Delete daily progress and all associated workout/meal progress
-   */
   async deleteDailyProgress(userId: number, progressId: number): Promise<void> {
     const progress = await this.dailyProgressRepository.findOne({
       where: { id: progressId },
@@ -333,9 +307,6 @@ export class ProgressService {
     await this.dailyProgressRepository.remove(progress);
   }
 
-  /**
-   * Get workout progress for a daily progress entry
-   */
   async getWorkoutProgress(userId: number, dailyProgressId: number): Promise<WorkoutProgress[]> {
     const dailyProgress = await this.dailyProgressRepository.findOne({
       where: { id: dailyProgressId },
@@ -353,9 +324,6 @@ export class ProgressService {
     });
   }
 
-  /**
-   * Get meal progress for a daily progress entry
-   */
   async getMealProgress(userId: number, dailyProgressId: number): Promise<MealProgress[]> {
     const dailyProgress = await this.dailyProgressRepository.findOne({
       where: { id: dailyProgressId },
@@ -373,9 +341,6 @@ export class ProgressService {
     });
   }
 
-  /**
-   * Get today's plan details for an accepted plan
-   */
   async getTodaysPlanDetails(userId: number, acceptedPlanId: number): Promise<any> {
     let acceptedPlan = await this.acceptedPlanRepository.findOne({
       where: { id: acceptedPlanId },
@@ -470,10 +435,8 @@ export class ProgressService {
       relations: ['workoutProgress', 'workoutProgress.workoutExercise', 'mealProgress', 'mealProgress.mealItem'],
     });
 
-    // Check if today's progress has been fully tracked
     let isFullyTracked = false;
     if (dailyProgress) {
-      // Check if overall satisfaction is filled (indicates complete submission)
       isFullyTracked = dailyProgress.overall_satisfaction !== null && dailyProgress.overall_satisfaction !== undefined;
     }
 
@@ -495,9 +458,6 @@ export class ProgressService {
     };
   }
 
-  /**
-   * Batch create or update progress for workout and meal items
-   */
   async saveBatchProgress(
     userId: number,
     acceptedPlanId: number,
@@ -558,7 +518,6 @@ export class ProgressService {
       });
       dailyProgress = await this.dailyProgressRepository.save(dailyProgress);
 
-      // Sync weight to user's member details if provided
       if (batchDto.dailyMetrics.current_weight) {
         await this.syncWeightToUserProfile(userId, batchDto.dailyMetrics.current_weight);
       }
@@ -631,15 +590,11 @@ export class ProgressService {
       throw new NotFoundException('Failed to reload daily progress');
     }
 
-    // Update completion percentage for the accepted plan
     await this.updatePlanCompletionPercentage(acceptedPlanId);
 
     return reloadedProgress;
   }
 
-  /**
-   * Calculate and update the completion percentage for an accepted plan
-   */
   private async updatePlanCompletionPercentage(acceptedPlanId: number): Promise<void> {
     const acceptedPlan = await this.acceptedPlanRepository.findOne({
       where: { id: acceptedPlanId },
@@ -650,22 +605,18 @@ export class ProgressService {
       return;
     }
 
-    // Count the number of days that have been tracked
     const trackedDaysCount = await this.dailyProgressRepository.count({
       where: { acceptedPlan: { id: acceptedPlanId } },
     });
 
-    // Get the total plan duration from the generated plan
     const totalDays = acceptedPlan.generatedPlan?.duration_days || 0;
 
-    // Calculate completion percentage
     let completionPercentage = 0;
     if (totalDays > 0) {
-      completionPercentage = Math.round((trackedDaysCount / totalDays) * 100 * 100) / 100; // Round to 2 decimal places
-      completionPercentage = Math.min(completionPercentage, 100); // Cap at 100%
+      completionPercentage = Math.round((trackedDaysCount / totalDays) * 100 * 100) / 100;
+      completionPercentage = Math.min(completionPercentage, 100);
     }
 
-    // Update the accepted plan with the new completion percentage
     acceptedPlan.completion_percentage = completionPercentage;
     await this.acceptedPlanRepository.save(acceptedPlan);
   }
@@ -700,9 +651,6 @@ export class ProgressService {
     return false;
   }
 
-  /**
-   * Helper: Validate plan status and date range for progress tracking
-   */
   private async validateProgressTracking(
     acceptedPlan: AcceptedPlan,
     progressDate: Date,

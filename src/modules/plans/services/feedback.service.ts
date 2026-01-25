@@ -14,15 +14,11 @@ export class FeedbackService {
     private acceptedPlanRepository: Repository<AcceptedPlan>,
   ) {}
 
-  /**
-   * Create plan feedback
-   */
   async createFeedback(
     userId: number,
     acceptedPlanId: number,
     dto: CreatePlanFeedbackDto,
   ): Promise<PlanFeedback> {
-    // Validate accepted plan exists and belongs to user
     const acceptedPlan = await this.acceptedPlanRepository.findOne({
       where: { id: acceptedPlanId },
       relations: ['user'],
@@ -44,9 +40,6 @@ export class FeedbackService {
     return this.feedbackRepository.save(feedback);
   }
 
-  /**
-   * Get feedback for a specific plan
-   */
   async getFeedback(
     userId: number,
     acceptedPlanId: number,
@@ -60,9 +53,6 @@ export class FeedbackService {
     });
   }
 
-  /**
-   * Get all feedback for a user
-   */
   async getUserFeedback(userId: number): Promise<PlanFeedback[]> {
     return this.feedbackRepository.find({
       where: { user: { id: userId } },
@@ -71,9 +61,6 @@ export class FeedbackService {
     });
   }
 
-  /**
-   * Update existing feedback
-   */
   async updateFeedback(
     userId: number,
     feedbackId: number,
@@ -92,9 +79,6 @@ export class FeedbackService {
     return this.feedbackRepository.save(feedback);
   }
 
-  /**
-   * Delete feedback
-   */
   async deleteFeedback(userId: number, feedbackId: number): Promise<void> {
     const feedback = await this.feedbackRepository.findOne({
       where: { id: feedbackId },
@@ -108,9 +92,6 @@ export class FeedbackService {
     await this.feedbackRepository.remove(feedback);
   }
 
-  /**
-   * Get feedback statistics for learning
-   */
   async getFeedbackStats(userId: number): Promise<{
     totalFeedbacks: number;
     averageOverallRating: number;

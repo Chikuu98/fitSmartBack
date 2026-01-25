@@ -22,7 +22,6 @@ export class AuthService {
       });
     }
 
-    // Check user account status
     if (user.status === 'pending_review') {
       throw new UnauthorizedException({
         message: 'Your account is pending admin approval. Please wait for approval to login.',

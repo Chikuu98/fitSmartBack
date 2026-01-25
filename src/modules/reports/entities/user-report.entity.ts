@@ -43,12 +43,10 @@ export class UserReport {
   @PrimaryGeneratedColumn()
   id: number;
 
-  // User who made the report
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'reporter_id' })
   reporter: User;
 
-  // User being reported
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'reported_user_id' })
   reported_user: User;
@@ -71,7 +69,6 @@ export class UserReport {
   @Column({ type: 'enum', enum: ReportStatus, default: ReportStatus.PENDING })
   status: ReportStatus;
 
-  // Admin who reviewed the report
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'reviewed_by_id' })
   reviewed_by: User;

@@ -26,7 +26,6 @@ export class CreateUserReportsTable20250725132000 implements MigrationInterface 
       )
     `);
 
-    // Create indexes
     await queryRunner.query(`CREATE INDEX IDX_reports_status ON user_reports(status)`);
     await queryRunner.query(`CREATE INDEX IDX_reports_type ON user_reports(report_type)`);
     await queryRunner.query(`CREATE INDEX IDX_reports_content ON user_reports(reported_content_type, reported_content_id)`);

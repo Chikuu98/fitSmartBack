@@ -2,7 +2,6 @@ import { MigrationInterface, QueryRunner, Table } from 'typeorm';
 
 export class CreateDailyProgressTable20250725131300 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // Create daily_progress table (main progress tracking)
     await queryRunner.createTable(
       new Table({
         name: 'daily_progress',

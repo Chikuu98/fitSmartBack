@@ -161,7 +161,6 @@ export class UsersController {
     return this.usersService.updateSocialLink(req.user.user_id, id, dto);
   }
 
-  // Admin endpoints
   @Get('/admin/pending-mentors')
   @Roles(UserRole.ADMIN)
   @ApiOperation({

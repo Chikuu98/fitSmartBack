@@ -29,7 +29,7 @@ export class DashboardController {
   @Roles(UserRole.MEMBER)
   @ApiOperation({ 
     summary: 'Get member dashboard data',
-    description: 'Retrieve comprehensive dashboard data for a member including sessions, forum activity, plans, and recent activities in a single request'
+    description: 'Retrieve dashboard data for a member'
   })
   @ApiResponse({
     status: HttpStatus.OK,
