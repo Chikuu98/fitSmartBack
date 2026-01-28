@@ -181,7 +181,9 @@ export class PlansService {
     };
   }
 
-  async getUserPlans(userId: number, status?: AcceptedPlanStatus): Promise<any[]> {
+  async getUserPlans(userId: number, status?: AcceptedPlanStatus, page: number = 1, limit: number = 10): Promise<any> {
+    const skip = (page - 1) * limit;
+    
     const queryBuilder = this.acceptedPlanRepository
       .createQueryBuilder('plan')
       .leftJoinAndSelect('plan.generatedPlan', 'generatedPlan')
@@ -193,20 +195,36 @@ export class PlansService {
 
     queryBuilder.orderBy('plan.created_at', 'DESC');
 
+    const total = await queryBuilder.getCount();
+    
+    queryBuilder.skip(skip).take(limit);
     const plans = await queryBuilder.getMany();
 
-    return plans.map(plan => ({
-      id: plan.id,
-      plan_name: plan.plan_name,
-      start_date: plan.start_date,
-      end_date: plan.end_date,
-      target_goal: plan.target_goal,
-      status: plan.status,
-      completion_percentage: plan.completion_percentage,
-      duration_days: plan.generatedPlan?.duration_days,
-      accepted_at: plan.accepted_at,
-      completed_at: plan.completed_at,
-    }));
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      success: true,
+      data: plans.map(plan => ({
+        id: plan.id,
+        plan_name: plan.plan_name,
+        start_date: plan.start_date,
+        end_date: plan.end_date,
+        target_goal: plan.target_goal,
+        status: plan.status,
+        completion_percentage: plan.completion_percentage,
+        duration_days: plan.generatedPlan?.duration_days,
+        accepted_at: plan.accepted_at,
+        completed_at: plan.completed_at,
+      })),
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
+    };
   }
 
   async getPlanDetails(userId: number, planId: number): Promise<any> {
@@ -269,7 +287,9 @@ export class PlansService {
     };
   }
 
-  async getAcceptedPlans(userId: number, status?: string): Promise<any[]> {
+  async getAcceptedPlans(userId: number, status?: string, page: number = 1, limit: number = 10): Promise<any> {
+    const skip = (page - 1) * limit;
+    
     const queryBuilder = this.acceptedPlanRepository
       .createQueryBuilder('plan')
       .leftJoinAndSelect('plan.generatedPlan', 'generatedPlan')
@@ -282,33 +302,49 @@ export class PlansService {
 
     queryBuilder.orderBy('plan.created_at', 'DESC');
 
+    const total = await queryBuilder.getCount();
+    
+    queryBuilder.skip(skip).take(limit);
     let plans = await queryBuilder.getMany();
 
     plans = await Promise.all(plans.map(plan => this.autoCompletePlanIfNeeded(plan)));
 
-    return plans.map(plan => ({
-      id: plan.id,
-      generatedPlan: {
-        id: plan.generatedPlan.id,
-        planType: plan.generatedPlan.planType,
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      success: true,
+      data: plans.map(plan => ({
+        id: plan.id,
+        generatedPlan: {
+          id: plan.generatedPlan.id,
+          planType: plan.generatedPlan.planType,
+          duration_days: plan.generatedPlan.duration_days,
+        },
+        plan_name: plan.plan_name,
+        start_date: plan.start_date,
+        end_date: plan.end_date,
+        target_goal: plan.target_goal,
+        initial_weight: plan.initial_weight,
+        target_weight: plan.target_weight,
+        status: plan.status,
+        completion_percentage: plan.completion_percentage || 0,
         duration_days: plan.generatedPlan.duration_days,
+        accepted_at: plan.accepted_at,
+        completed_at: plan.completed_at,
+        paused_at: plan.paused_at,
+        resumed_at: plan.resumed_at,
+        total_paused_days: plan.total_paused_days || 0,
+        created_at: plan.created_at,
+      })),
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
       },
-      plan_name: plan.plan_name,
-      start_date: plan.start_date,
-      end_date: plan.end_date,
-      target_goal: plan.target_goal,
-      initial_weight: plan.initial_weight,
-      target_weight: plan.target_weight,
-      status: plan.status,
-      completion_percentage: plan.completion_percentage || 0,
-      duration_days: plan.generatedPlan.duration_days,
-      accepted_at: plan.accepted_at,
-      completed_at: plan.completed_at,
-      paused_at: plan.paused_at,
-      resumed_at: plan.resumed_at,
-      total_paused_days: plan.total_paused_days || 0,
-      created_at: plan.created_at,
-    }));
+    };
   }
 
   async getGeneratedPlan(userId: number, planId: number): Promise<any> {

@@ -92,29 +92,63 @@ export class BookingService {
     };
   }
 
-  async findByMemberId(member_id: number) {
+  async findByMemberId(member_id: number, page: number = 1, limit: number = 10) {
     const member = await this.userRepo.findOne({ where: { id: member_id } });
     if (!member) throw new NotFoundException('Member not found');
-    const bookings = await this.bookingRepo.find({
+    
+    const skip = (page - 1) * limit;
+    
+    const [bookings, total] = await this.bookingRepo.findAndCount({
       where: { member },
       relations: ['mentorSlot.mentor', 'member', 'bookingPayment'],
+      order: { created_at: 'DESC' },
+      skip,
+      take: limit,
     });
+    
+    const totalPages = Math.ceil(total / limit);
+    
     return {
       success: true,
       data: bookings,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
     };
   }
 
-  async findByMentorId(mentor_id: number) {
+  async findByMentorId(mentor_id: number, page: number = 1, limit: number = 10) {
     const mentor = await this.userRepo.findOne({ where: { id: mentor_id } });
     if (!mentor) throw new NotFoundException('Mentor not found');
-    const bookings = await this.bookingRepo.find({
+    
+    const skip = (page - 1) * limit;
+    
+    const [bookings, total] = await this.bookingRepo.findAndCount({
       where: { mentorSlot: { mentor: mentor } },
       relations: ['mentorSlot', 'member', 'bookingPayment'],
+      order: { created_at: 'DESC' },
+      skip,
+      take: limit,
     });
+    
+    const totalPages = Math.ceil(total / limit);
+    
     return {
       success: true,
       data: bookings,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
     };
   }
 

@@ -7,10 +7,11 @@ import {
   Delete,
   UseGuards,
   Req,
+  Query,
 } from '@nestjs/common';
 import { MentorSlotsService } from './mentor-slots.service';
 import { CreateSlotDto } from './dto/create-slot.dto';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { Roles } from '@/common/decorators/roles.decorator';
@@ -45,8 +46,14 @@ export class MentorSlotsController {
 
   @Get('mentor/:mentor_id')
   @ApiOperation({ summary: 'Get all slots for a mentor' })
-  async getMentorSlots(@Param('mentor_id') mentor_id: number) {
-    return this.mentorSlotService.getMentorSlots(mentor_id);
+  @ApiQuery({ name: 'page', required: false, description: 'Page number (default: 1)' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Items per page (default: 10)' })
+  async getMentorSlots(
+    @Param('mentor_id') mentor_id: number,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
+    return this.mentorSlotService.getMentorSlots(mentor_id, Number(page) || 1, Number(limit) || 10);
   }
 
   @Get(':slotId')

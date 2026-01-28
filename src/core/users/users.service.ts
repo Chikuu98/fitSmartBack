@@ -149,7 +149,11 @@ export class UsersService {
     country?: string,
     language?: string,
     authUser?: any,
+    page: number = 1,
+    limit: number = 10,
   ): Promise<any> {
+    const skip = (page - 1) * limit;
+    
     const query = this.userRepo
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.mentorDetail', 'mentorDetail')
@@ -179,13 +183,26 @@ export class UsersService {
       query.andWhere('user.language = :language', { language: filterLanguage });
     }
 
+    const total = await query.getCount();
+    
+    query.skip(skip).take(limit);
     const mentors = await query.getMany();
 
     const mentorsWithRatings = await this.addAverageRatingsToMentors(mentors);
+    
+    const totalPages = Math.ceil(total / limit);
 
     return {
       success: true,
       data: mentorsWithRatings.map((mentor) => instanceToPlain(mentor)),
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
     };
   }
 
@@ -429,19 +446,33 @@ export class UsersService {
     return { success: true, message: 'Social link updated', data: link };
   }
 
-  async getPendingMentors(): Promise<any> {
-    const pendingMentors = await this.userRepo.find({
+  async getPendingMentors(page: number = 1, limit: number = 10): Promise<any> {
+    const skip = (page - 1) * limit;
+    
+    const [pendingMentors, total] = await this.userRepo.findAndCount({
       where: {
         role: UserRole.MENTOR,
         status: UserAccountStatus.PENDING_REVIEW,
       },
       relations: ['mentorDetail'],
       order: { created_at: 'DESC' },
+      skip,
+      take: limit,
     });
+
+    const totalPages = Math.ceil(total / limit);
 
     return {
       success: true,
       data: pendingMentors.map((mentor) => instanceToPlain(mentor)),
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
     };
   }
 

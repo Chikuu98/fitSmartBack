@@ -8,9 +8,10 @@ import {
   Delete,
   UseGuards,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiBearerAuth, ApiOperation, ApiTags, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { UserRole } from '@/core/users/user.entity';
@@ -35,9 +36,14 @@ export class ForumTypeController {
 
   @Get()
   @ApiOperation({ summary: 'Get all forum types' })
+  @ApiQuery({ name: 'page', required: false, description: 'Page number (default: 1)' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Items per page (default: 10)' })
   @ApiResponse({ status: 200, description: 'List of all forum types' })
-  async findAll() {
-    return await this.forumTypeService.findAll();
+  async findAll(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
+    return await this.forumTypeService.findAll(Number(page) || 1, Number(limit) || 10);
   }
 
   @Get(':id')

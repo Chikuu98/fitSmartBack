@@ -68,12 +68,30 @@ export class UsersController {
     required: false,
     description: 'Filter by language',
   })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    description: 'Page number (default: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: 'Items per page (default: 10)',
+  })
   async findMentors(
     @Query('country') country?: string,
     @Query('language') language?: string,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
     @Req() req?: any,
   ) {
-    return this.usersService.findMentorsWithFilter(country, language, req.user);
+    return this.usersService.findMentorsWithFilter(
+      country,
+      language,
+      req.user,
+      Number(page) || 1,
+      Number(limit) || 10,
+    );
   }
 
   @Get(':id')
@@ -166,8 +184,21 @@ export class UsersController {
   @ApiOperation({
     summary: 'Get all pending mentor registrations (Admin only)',
   })
-  async getPendingMentors() {
-    return this.usersService.getPendingMentors();
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    description: 'Page number (default: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: 'Items per page (default: 10)',
+  })
+  async getPendingMentors(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
+    return this.usersService.getPendingMentors(Number(page) || 1, Number(limit) || 10);
   }
 
   @Get('/admin/mentors')

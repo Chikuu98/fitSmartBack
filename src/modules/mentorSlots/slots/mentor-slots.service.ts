@@ -41,13 +41,29 @@ export class MentorSlotsService {
     };
   }
 
-  async getMentorSlots(mentor_id: number) {
-    const slots = await this.timeSlotRepo.find({
+  async getMentorSlots(mentor_id: number, page: number = 1, limit: number = 10) {
+    const skip = (page - 1) * limit;
+    
+    const [slots, total] = await this.timeSlotRepo.findAndCount({
       where: { mentor: { id: mentor_id }, is_booked: false },
+      order: { date: 'ASC', start_time: 'ASC' },
+      skip,
+      take: limit,
     });
+    
+    const totalPages = Math.ceil(total / limit);
+    
     return {
       success: true,
       data: slots,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
     };
   }
 
