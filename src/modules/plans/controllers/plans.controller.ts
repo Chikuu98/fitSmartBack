@@ -143,6 +143,8 @@ export class PlansController {
     description: 'Retrieve all accepted and active plans for the authenticated user'
   })
   @ApiQuery({ name: 'status', required: false, description: 'Filter by plan status' })
+  @ApiQuery({ name: 'page', required: false, description: 'Page number (default: 1)' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Items per page (default: 10)' })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Accepted plans retrieved successfully',
@@ -164,8 +166,10 @@ export class PlansController {
   async getAcceptedPlans(
     @Request() req,
     @Query('status') status?: string,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
   ) {
-    return this.plansService.getAcceptedPlans(req.user.id, status);
+    return this.plansService.getAcceptedPlans(req.user.id, status, Number(page) || 1, Number(limit) || 10);
   }
 
   @Get('generated/:id')

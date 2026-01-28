@@ -34,15 +34,29 @@ export class ForumTypeService {
     };
   }
 
-  async findAll(): Promise<any> {
-    const forumTypes = await this.forumTypeRepo.find({
+  async findAll(page: number = 1, limit: number = 10): Promise<any> {
+    const skip = (page - 1) * limit;
+    
+    const [forumTypes, total] = await this.forumTypeRepo.findAndCount({
       relations: ['threads'],
       order: { created_at: 'DESC' },
+      skip,
+      take: limit,
     });
+
+    const totalPages = Math.ceil(total / limit);
 
     return {
       success: true,
       data: forumTypes,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
     };
   }
 

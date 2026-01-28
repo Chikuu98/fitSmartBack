@@ -8,12 +8,13 @@ import {
   UseGuards,
   ParseIntPipe,
   Req,
+  Query,
 } from '@nestjs/common';
 import { BookingService } from '@/modules/bookings/booking.service';
 import { CreateBookingDto } from '@/modules/bookings/dto/create-booking.dto';
 import { UpdateBookingDto } from '@/modules/bookings/dto/update-booking.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags, ApiQuery } from '@nestjs/swagger';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { User, UserRole } from '@/core/users/user.entity';
 import { Roles } from '@/common/decorators/roles.decorator';
@@ -48,16 +49,28 @@ export class BookingController {
 
   @Get('member/:member_id')
   @ApiOperation({ summary: 'Get bookings by member ID' })
+  @ApiQuery({ name: 'page', required: false, description: 'Page number (default: 1)' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Items per page (default: 10)' })
   @Roles(UserRole.MEMBER)
-  async findByMemberId(@Param('member_id', ParseIntPipe) member_id: number) {
-    return this.bookingService.findByMemberId(member_id);
+  async findByMemberId(
+    @Param('member_id', ParseIntPipe) member_id: number,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
+    return this.bookingService.findByMemberId(member_id, Number(page) || 1, Number(limit) || 10);
   }
 
   @Get('mentor/:mentor_id')
   @ApiOperation({ summary: 'Get bookings by mentor ID' })
+  @ApiQuery({ name: 'page', required: false, description: 'Page number (default: 1)' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Items per page (default: 10)' })
   @Roles(UserRole.MENTOR)
-  async findByMentorId(@Param('mentor_id', ParseIntPipe) mentor_id: number) {
-    return this.bookingService.findByMentorId(mentor_id);
+  async findByMentorId(
+    @Param('mentor_id', ParseIntPipe) mentor_id: number,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
+    return this.bookingService.findByMentorId(mentor_id, Number(page) || 1, Number(limit) || 10);
   }
 
   @Patch(':id')
