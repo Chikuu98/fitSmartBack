@@ -31,6 +31,7 @@ export class MentorSlotsService {
     if (!slot) {
       throw new NotFoundException('Slot not found');
     }
+    slot.date = dto.date;
     slot.start_time = dto.start_time;
     slot.end_time = dto.end_time;
     slot.is_booked = dto.is_booked;
@@ -46,7 +47,7 @@ export class MentorSlotsService {
     
     const [slots, total] = await this.timeSlotRepo.findAndCount({
       where: { mentor: { id: mentor_id }, is_booked: false },
-      order: { date: 'ASC', start_time: 'ASC' },
+      order: { date: 'DESC', start_time: 'DESC' },
       skip,
       take: limit,
     });
