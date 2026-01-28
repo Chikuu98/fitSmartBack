@@ -42,7 +42,7 @@ export class UsersController {
     summary: 'Get all users',
   })
   @Roles(UserRole.ADMIN)
-  findAll(): Promise<User[]> {
+  async findAll() {
     return this.usersService.findAll();
   }
 

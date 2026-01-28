@@ -99,9 +99,13 @@ export class UsersService {
     };
   }
 
-  async findAll(): Promise<any[]> {
+  async findAll() {
     const users = await this.userRepo.find();
-    return users.map((user) => instanceToPlain(user));
+    return {
+      success: true,
+      message: 'Users retrieved successfully',
+      data: users.map((user) => instanceToPlain(user)),
+    };
   }
 
   async findOne(id: number): Promise<any> {
@@ -159,7 +163,8 @@ export class UsersService {
       .leftJoinAndSelect('user.mentorDetail', 'mentorDetail')
       .leftJoinAndSelect('mentorDetail.certification', 'certification')
       .leftJoinAndSelect('mentorDetail.socialLink', 'socialLink')
-      .where('user.role = :role', { role: UserRole.MENTOR });
+      .where('user.status = :status', { status: UserAccountStatus.ACTIVE })
+      .andWhere('user.role = :role', { role: UserRole.MENTOR });
 
     let filterCountry = country;
     let filterLanguage = language;
