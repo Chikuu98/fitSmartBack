@@ -2,8 +2,8 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { DailyProgress } from '../entities/daily-progress.entity';
-import { WorkoutProgress } from '../entities/workout-progress.entity';
-import { MealProgress } from '../entities/meal-progress.entity';
+import { WorkoutProgress, WorkoutStatus } from '../entities/workout-progress.entity';
+import { MealProgress, MealStatus } from '../entities/meal-progress.entity';
 import { AcceptedPlan, AcceptedPlanStatus } from '../entities/accepted-plan.entity';
 import { WorkoutExercise } from '../entities/workout-exercise.entity';
 import { MealItem } from '../entities/meal-item.entity';
@@ -221,20 +221,50 @@ export class ProgressService {
 
     const progressEntries = await this.dailyProgressRepository.find({
       where: { acceptedPlan: { id: acceptedPlanId } },
+      relations: ['workoutProgress', 'mealProgress'],
       order: { progress_date: 'DESC' },
     });
 
     const totalDays = progressEntries.length;
     
-    const completedDays = progressEntries.filter(p => 
-      p.overall_satisfaction && p.overall_satisfaction >= 5
-    ).length;
+    let totalTasks = 0;
+    let completedTasks = 0;
     
-    const completionRate = totalDays > 0 ? (completedDays / totalDays) * 100 : 0;
+    progressEntries.forEach(entry => {
+      const workouts = entry.workoutProgress || [];
+      const meals = entry.mealProgress || [];
+      
+      totalTasks += workouts.length + meals.length;
+      
+      const completedWorkouts = workouts.filter(w => w.status === WorkoutStatus.COMPLETED).length;
+      const completedMeals = meals.filter(m => m.status === MealStatus.FULLY_CONSUMED).length;
+      
+      completedTasks += completedWorkouts + completedMeals;
+    });
+    
+    const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+    
+    const completedDays = progressEntries.filter(entry => {
+      const workouts = entry.workoutProgress || [];
+      const meals = entry.mealProgress || [];
+      
+      if (workouts.length === 0 && meals.length === 0) return false;
+      
+      const allWorkoutsCompleted = workouts.every(w => w.status === WorkoutStatus.COMPLETED);
+      const allMealsCompleted = meals.every(m => m.status === MealStatus.FULLY_CONSUMED);
+      
+      return allWorkoutsCompleted && allMealsCompleted;
+    }).length;
 
     let streakDays = 0;
     for (const entry of progressEntries) {
-      if (entry.overall_satisfaction && entry.overall_satisfaction >= 5) {
+      const workouts = entry.workoutProgress || [];
+      const meals = entry.mealProgress || [];
+      
+      const hasCompletedWorkout = workouts.some(w => w.status === WorkoutStatus.COMPLETED);
+      const hasCompletedMeal = meals.some(m => m.status === MealStatus.FULLY_CONSUMED);
+      
+      if (hasCompletedWorkout || hasCompletedMeal) {
         streakDays++;
       } else {
         break;
