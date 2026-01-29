@@ -131,7 +131,7 @@ export class MemberReportService {
         mealStats: this.calculateMealStats(dailyProgressData),
         wellnessMetrics: this.calculateWellnessMetrics(dailyProgressData),
         bookingStats: this.calculateBookingStats(bookings),
-        dailyBreakdown: this.buildDailyBreakdown(dailyProgressData),
+        dailyBreakdown: this.buildDailyBreakdown(dailyProgressData, startDate, endDate),
         summary: {
           totalDaysTracked: 0,
           consistencyScore: 0,
@@ -142,7 +142,7 @@ export class MemberReportService {
       };
 
       if (dto.period === ReportPeriod.MONTHLY) {
-        report.weeklyComparison = this.buildWeeklyComparison(dailyProgressData);
+        report.weeklyComparison = this.buildWeeklyComparison(dailyProgressData, startDate, endDate);
       }
 
       report.summary = this.calculateSummary(report);
@@ -443,8 +443,44 @@ export class MemberReportService {
 
   private buildDailyBreakdown(
     dailyProgressData: DailyProgress[],
+    startDate: string,
+    endDate: string,
   ): MemberProgressReport['dailyBreakdown'] {
-    return dailyProgressData.map((dp) => {
+    const dataByDate = new Map<string, DailyProgress>();
+    dailyProgressData.forEach((dp) => {
+      const dateStr = (typeof dp.progress_date === 'string' 
+        ? new Date(dp.progress_date) 
+        : dp.progress_date).toISOString().split('T')[0];
+      dataByDate.set(dateStr, dp);
+    });
+
+    const allDates: string[] = [];
+    const currentDate = new Date(startDate);
+    const end = new Date(endDate);
+    
+    while (currentDate <= end) {
+      allDates.push(currentDate.toISOString().split('T')[0]);
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return allDates.map((dateStr) => {
+      const dp = dataByDate.get(dateStr);
+      
+      if (!dp) {
+        return {
+          date: dateStr,
+          dayNumber: null,
+          weight: null,
+          energyLevel: null,
+          mood: null,
+          sleepHours: null,
+          waterIntake: null,
+          workoutCompletion: 0,
+          mealCompletion: 0,
+          overallSatisfaction: null,
+        };
+      }
+
       const workouts = dp.workoutProgress || [];
       const meals = dp.mealProgress || [];
 
@@ -464,9 +500,7 @@ export class MemberReportService {
           : 0;
 
       return {
-        date: (typeof dp.progress_date === 'string' 
-          ? new Date(dp.progress_date) 
-          : dp.progress_date).toISOString().split('T')[0],
+        date: dateStr,
         dayNumber: dp.day_number,
         weight: dp.current_weight ? Number(dp.current_weight) : null,
         energyLevel: dp.energy_level || null,
@@ -482,32 +516,70 @@ export class MemberReportService {
 
   private buildWeeklyComparison(
     dailyProgressData: DailyProgress[],
+    startDate: string,
+    endDate: string,
   ): MemberProgressReport['weeklyComparison'] {
     if (dailyProgressData.length === 0) return [];
 
-    const weeks: { [key: number]: DailyProgress[] } = {};
-    const firstDate = typeof dailyProgressData[0].progress_date === 'string'
-      ? new Date(dailyProgressData[0].progress_date)
-      : dailyProgressData[0].progress_date;
+    const reportStartDate = new Date(startDate);
+    const reportEndDate = new Date(endDate);
 
+    const weekStartDate = new Date(reportStartDate);
+    const dayOfWeek = weekStartDate.getDay();
+    const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    weekStartDate.setDate(weekStartDate.getDate() - daysToMonday);
+
+    const dataByDate = new Map<string, DailyProgress>();
     dailyProgressData.forEach((dp) => {
-      const dpDate = typeof dp.progress_date === 'string'
-        ? new Date(dp.progress_date)
-        : dp.progress_date;
-      const daysDiff = Math.floor(
-        (dpDate.getTime() - firstDate.getTime()) /
-          (1000 * 60 * 60 * 24),
-      );
-      const weekNumber = Math.floor(daysDiff / 7) + 1;
-
-      if (!weeks[weekNumber]) {
-        weeks[weekNumber] = [];
-      }
-      weeks[weekNumber].push(dp);
+      const dateStr = (typeof dp.progress_date === 'string' 
+        ? new Date(dp.progress_date) 
+        : dp.progress_date).toISOString().split('T')[0];
+      dataByDate.set(dateStr, dp);
     });
 
-    return Object.entries(weeks).map(([weekNum, weekData]) => {
-      const weights = weekData
+    const weeks: Array<{
+      weekNumber: number;
+      startDate: string;
+      endDate: string;
+      data: DailyProgress[];
+    }> = [];
+
+    let weekNumber = 1;
+    let currentWeekStart = new Date(weekStartDate);
+
+    while (currentWeekStart <= reportEndDate) {
+      const currentWeekEnd = new Date(currentWeekStart);
+      currentWeekEnd.setDate(currentWeekEnd.getDate() + 6);
+
+      const weekData: DailyProgress[] = [];
+      const weekDate = new Date(currentWeekStart);
+      
+      for (let i = 0; i < 7; i++) {
+        if (weekDate >= reportStartDate && weekDate <= reportEndDate) {
+          const dateStr = weekDate.toISOString().split('T')[0];
+          const dp = dataByDate.get(dateStr);
+          if (dp) {
+            weekData.push(dp);
+          }
+        }
+        weekDate.setDate(weekDate.getDate() + 1);
+      }
+
+      if (currentWeekEnd >= reportStartDate && currentWeekStart <= reportEndDate) {
+        weeks.push({
+          weekNumber,
+          startDate: currentWeekStart.toISOString().split('T')[0],
+          endDate: currentWeekEnd.toISOString().split('T')[0],
+          data: weekData,
+        });
+        weekNumber++;
+      }
+
+      currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+    }
+
+    return weeks.map((week) => {
+      const weights = week.data
         .filter((d) => d.current_weight !== null)
         .map((d) => Number(d.current_weight));
       const averageWeight =
@@ -515,7 +587,7 @@ export class MemberReportService {
           ? weights.reduce((sum, w) => sum + w, 0) / weights.length
           : null;
 
-      const allWorkouts = weekData.flatMap((d) => d.workoutProgress || []);
+      const allWorkouts = week.data.flatMap((d) => d.workoutProgress || []);
       const workoutAdherence =
         allWorkouts.length > 0
           ? (allWorkouts.filter((w) => w.status === 'completed').length /
@@ -523,7 +595,7 @@ export class MemberReportService {
             100
           : 0;
 
-      const allMeals = weekData.flatMap((d) => d.mealProgress || []);
+      const allMeals = week.data.flatMap((d) => d.mealProgress || []);
       const mealAdherence =
         allMeals.length > 0
           ? ((allMeals.filter((m) => m.status === 'fully_consumed').length +
@@ -533,7 +605,7 @@ export class MemberReportService {
             100
           : 0;
 
-      const satisfactions = weekData
+      const satisfactions = week.data
         .filter((d) => d.overall_satisfaction !== null)
         .map((d) => d.overall_satisfaction);
       const averageSatisfaction =
@@ -541,18 +613,10 @@ export class MemberReportService {
           ? satisfactions.reduce((sum, s) => sum + s, 0) / satisfactions.length
           : null;
 
-      const dates = weekData
-        .map((d) => typeof d.progress_date === 'string' 
-          ? new Date(d.progress_date) 
-          : d.progress_date)
-        .sort();
-      const startDate = dates[0].toISOString().split('T')[0];
-      const endDate = dates[dates.length - 1].toISOString().split('T')[0];
-
       return {
-        weekNumber: parseInt(weekNum),
-        startDate,
-        endDate,
+        weekNumber: week.weekNumber,
+        startDate: week.startDate,
+        endDate: week.endDate,
         averageWeight: averageWeight !== null ? Math.round(averageWeight * 10) / 10 : null,
         workoutAdherence: Math.round(workoutAdherence * 100) / 100,
         mealAdherence: Math.round(mealAdherence * 100) / 100,
