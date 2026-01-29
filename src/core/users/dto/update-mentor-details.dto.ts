@@ -13,7 +13,7 @@ export class UpdateMentorDetailsDto {
 
   @IsOptional()
   @IsString()
-  @Length(1, 500)
+  @Length(1, 255)
   @ApiPropertyOptional({
     example:
       'Certified nutritionist and fitness trainer with over 15 years of experience helping clients achieve their health and wellness goals.',
