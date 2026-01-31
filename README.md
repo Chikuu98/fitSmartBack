@@ -1,98 +1,439 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# FIT-SMART Backend API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+FIT-SMART is a comprehensive fitness and wellness platform that connects users with mentors, provides AI-powered workout plans, tracks progress, and facilitates community engagement. This repository contains the backend API built with NestJS, TypeScript, and MySQL.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Table of Contents
 
-## Description
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Prerequisites](#prerequisites)
+- [Installation Guide](#installation-guide)
+- [Configuration](#configuration)
+- [Database Setup](#database-setup)
+- [Running the Application](#running-the-application)
+- [API Documentation](#api-documentation)
+- [Project Structure](#project-structure)
+- [Available Scripts](#available-scripts)
+- [Testing](#testing)
+- [Troubleshooting](#troubleshooting)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Features
 
-## Project setup
+- **User Management**: Registration, authentication, and profile management for members and mentors
+- **Authentication**: JWT-based authentication with role-based access control (Admin, Member, Mentor)
+- **Mentor Booking System**: Schedule and manage appointments with fitness mentors
+- **AI-Powered Fitness Plans**: Generate personalized workout and nutrition plans using Google's Gemini AI
+- **Community Forums**: Discussion threads, replies, likes, and tags for community engagement
+- **Progress Tracking**: Monitor fitness goals and achievements
+- **Reports & Analytics**: Generate user reports and dashboard insights
+- **Notifications**: Real-time notification system for bookings and updates
+- **Google Calendar Integration**: Sync mentor bookings with Google Calendar
 
+## Tech Stack
+
+- **Framework**: NestJS 11.x
+- **Language**: TypeScript 5.x
+- **Database**: MySQL with TypeORM
+- **Authentication**: JWT with Passport
+- **AI Integration**: Google Gemini AI
+- **API Documentation**: Swagger/OpenAPI
+- **Logging**: Winston with daily rotate file
+- **Validation**: Class Validator & Class Transformer
+
+## Prerequisites
+
+Before installing the application, ensure you have the following installed:
+
+- **Node.js**: Version 18.x or higher ([Download](https://nodejs.org/))
+- **Yarn**: Version 1.22.x or higher ([Installation Guide](https://classic.yarnpkg.com/en/docs/install))
+- **MySQL**: Version 8.x or higher ([Download](https://dev.mysql.com/downloads/mysql/))
+- **Git**: For cloning the repository ([Download](https://git-scm.com/downloads))
+
+To verify installations, run:
 ```bash
-$ yarn install
+node --version
+yarn --version
+mysql --version
 ```
 
-## Compile and run the project
+## Installation Guide
+
+### Step 1: Clone the Repository
 
 ```bash
-# development
-$ yarn run start
-
-# watch mode
-$ yarn run start:dev
-
-# production mode
-$ yarn run start:prod
+git clone <repository-url>
+cd fitSmartBack
 ```
 
-## Run tests
+### Step 2: Install Dependencies
 
 ```bash
-# unit tests
-$ yarn run test
-
-# e2e tests
-$ yarn run test:e2e
-
-# test coverage
-$ yarn run test:cov
+yarn install
 ```
 
-## Deployment
+This will install all required packages as defined in `package.json`.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+### Step 3: Set Up Environment Variables
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Create a `.env` file in the root directory by copying the example file:
 
 ```bash
-$ yarn install -g @nestjs/mau
-$ mau deploy
+cp example.env .env
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Edit the `.env` file with your configuration (see [Configuration](#configuration) section).
 
-## Resources
+### Step 4: Set Up MySQL Database
 
-Check out a few resources that may come in handy when working with NestJS:
+1. **Create a MySQL database**:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```sql
+CREATE DATABASE fitsmart;
+```
 
-## Support
+2. **Create a MySQL user** (if needed):
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```sql
+CREATE USER 'fitsmart_user'@'localhost' IDENTIFIED BY 'your_password';
+GRANT ALL PRIVILEGES ON fitsmart.* TO 'fitsmart_user'@'localhost';
+FLUSH PRIVILEGES;
+```
 
-## Stay in touch
+### Step 5: Run Database Migrations
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Execute the following command to create database tables:
+
+```bash
+yarn migration:run
+```
+
+### Step 6: Seed Admin User
+
+Create an initial admin user:
+
+```bash
+yarn seed:admin
+```
+
+Default admin credentials will be created as specified in the seed file.
+
+### Step 7: Start the Application
+
+```bash
+# Development mode with hot-reload
+yarn start:dev
+
+# Production mode
+yarn start:prod
+```
+
+The API will be available at `http://localhost:3000` (or the port specified in your `.env` file).
+
+## Configuration
+
+Configure the following environment variables in your `.env` file:
+
+### Database Configuration
+
+```env
+DB_HOST=localhost
+DB_PORT=3306
+DB_USERNAME=fitsmart_user
+DB_PASSWORD=your_database_password
+DB_NAME=fitsmart
+```
+
+### Application Settings
+
+```env
+PORT=3000
+JWT_SECRET=your_jwt_secret_key_here
+FRONTEND_URL=http://localhost:5173
+```
+
+**Important**: Generate a strong JWT secret using:
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+### Google Gemini AI Configuration
+
+Obtain a Gemini API key from [Google AI Studio](https://makersuite.google.com/app/apikey):
+
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_PRIMARY_MODEL=gemini-2.5-flash
+GEMINI_SECONDARY_MODEL=gemini-2.0-flash
+GEMINI_TERTIARY_MODEL=gemini-2.0-flash-exp
+GEMINI_FALLBACK_MODEL=gemini-2.5-pro
+```
+
+## Database Setup
+
+### Running Migrations
+
+The application uses TypeORM migrations to manage database schema. Migrations are located in `src/database/migrations/`.
+
+```bash
+# Run all pending migrations
+yarn migration:run
+
+# Revert last migration
+npm run typeorm -- migration:revert -d src/config/data-source.ts
+```
+
+### Database Schema
+
+The application includes the following main tables:
+- **users**: User accounts (admin, member, mentor)
+- **member_details**: Member-specific information and fitness goals
+- **mentor_details**: Mentor profiles and specializations
+- **certifications**: Mentor certifications
+- **social_links**: Mentor social media links
+- **mentor_time_slots**: Available booking slots
+- **bookings**: Mentor appointment bookings
+- **booking_payments**: Payment records
+- **forum_types, forum_tags, forum_threads, forum_replies, forum_likes**: Community forum data
+- **plan_types, generated_plans, accepted_plans, workout_plans**: AI-generated fitness plans
+- **notifications**: User notifications
+- **reports**: User activity reports
+
+## Running the Application
+
+### Development Mode
+
+```bash
+yarn start:dev
+```
+
+This starts the application with hot-reload enabled. Any changes to the source code will automatically restart the server.
+
+### Production Mode
+
+```bash
+# Build the application
+yarn build
+
+# Start production server
+yarn start:prod
+```
+
+### Debug Mode
+
+```bash
+yarn start:debug
+```
+
+Starts the application in debug mode, allowing you to attach a debugger (port 9229).
+
+## API Documentation
+
+Once the application is running, access the interactive API documentation:
+
+**Swagger UI**: `http://localhost:3000/api-docs`
+
+The Swagger documentation provides:
+- Complete API endpoint reference
+- Request/response schemas
+- Authentication requirements
+- Interactive API testing
+
+### Authentication
+
+Most endpoints require JWT authentication. Include the token in the Authorization header:
+
+```
+Authorization: Bearer <your_jwt_token>
+```
+
+### Main API Endpoints
+
+- **Auth**: `/api/auth/*` - Login, registration, password reset
+- **Users**: `/api/users/*` - User profile management
+- **Members**: `/api/users/members/*` - Member-specific endpoints
+- **Mentors**: `/api/users/mentors/*` - Mentor profiles and management
+- **Bookings**: `/api/bookings/*` - Mentor booking system
+- **Mentor Slots**: `/api/mentor-slots/*` - Availability management
+- **Plans**: `/api/plans/*` - AI-generated fitness plans
+- **Forums**: `/api/forums/*` - Community forum threads and replies
+- **Dashboard**: `/api/dashboard/*` - Dashboard analytics
+- **Reports**: `/api/reports/*` - User reports
+- **Notifications**: `/api/notifications/*` - User notifications
+
+## Project Structure
+
+```
+fitSmartBack/
+├── src/
+│   ├── common/              # Shared utilities and services
+│   │   ├── decorators/      # Custom decorators (roles, etc.)
+│   │   ├── guards/          # Auth guards (JWT, roles)
+│   │   └── services/        # Logger service
+│   ├── config/              # Configuration files
+│   │   ├── data-source.ts   # TypeORM data source
+│   │   ├── logger.config.ts # Winston logger setup
+│   │   ├── swagger.config.ts# Swagger configuration
+│   │   └── typeorm.config.ts# TypeORM configuration
+│   ├── core/                # Core business modules
+│   │   ├── auth/            # Authentication module
+│   │   └── users/           # User management
+│   │       ├── members/     # Member-specific logic
+│   │       └── mentors/     # Mentor-specific logic
+│   ├── database/            # Database related files
+│   │   ├── migrations/      # TypeORM migrations
+│   │   └── seeds/           # Database seeds
+│   ├── modules/             # Feature modules
+│   │   ├── bookings/        # Booking system
+│   │   ├── communityForums/ # Forum functionality
+│   │   ├── dashboard/       # Dashboard analytics
+│   │   ├── mentorSlots/     # Mentor availability
+│   │   ├── notifications/   # Notification system
+│   │   ├── plans/           # AI fitness plans
+│   │   └── reports/         # Reporting system
+│   ├── app.module.ts        # Root application module
+│   └── main.ts              # Application entry point
+├── test/                    # E2E tests
+├── logs/                    # Application logs
+├── .env                     # Environment variables
+├── package.json             # Dependencies and scripts
+└── tsconfig.json            # TypeScript configuration
+```
+
+## Available Scripts
+
+### Development
+
+```bash
+yarn start           # Start application
+yarn start:dev       # Start with hot-reload (development)
+yarn start:debug     # Start in debug mode
+yarn start:prod      # Start production build
+```
+
+### Building
+
+```bash
+yarn build           # Compile TypeScript to JavaScript
+```
+
+### Code Quality
+
+```bash
+yarn lint            # Run ESLint and fix issues
+yarn format          # Format code with Prettier
+```
+
+### Testing
+
+```bash
+yarn test            # Run unit tests
+yarn test:watch      # Run tests in watch mode
+yarn test:cov        # Generate test coverage report
+yarn test:e2e        # Run end-to-end tests
+```
+
+### Database
+
+```bash
+yarn migration:run   # Run pending migrations
+yarn seed:admin      # Create admin user
+```
+
+## Testing
+
+The application includes comprehensive testing setup:
+
+### Unit Tests
+
+```bash
+yarn test
+```
+
+Unit tests are located alongside source files with `.spec.ts` extension.
+
+### End-to-End Tests
+
+```bash
+yarn test:e2e
+```
+
+E2E tests are located in the `test/` directory.
+
+### Test Coverage
+
+```bash
+yarn test:cov
+```
+
+Generates a coverage report in the `coverage/` directory.
+
+## Troubleshooting
+
+### Common Issues
+
+#### Port Already in Use
+
+If port 3000 is already in use:
+1. Change the `PORT` in your `.env` file
+2. Or stop the process using port 3000:
+
+```bash
+# Windows
+netstat -ano | findstr :3000
+taskkill /PID <PID> /F
+
+# Linux/Mac
+lsof -ti:3000 | xargs kill
+```
+
+#### Database Connection Failed
+
+- Verify MySQL is running
+- Check database credentials in `.env`
+- Ensure database exists: `CREATE DATABASE fitsmart;`
+- Verify MySQL user has proper permissions
+
+#### Migration Errors
+
+```bash
+# Reset migrations (WARNING: drops all data)
+npm run typeorm -- schema:drop -d src/config/data-source.ts
+yarn migration:run
+```
+
+#### Module Not Found Errors
+
+```bash
+# Clear node modules and reinstall
+rm -rf node_modules yarn.lock
+yarn install
+```
+
+#### JWT Token Issues
+
+- Ensure `JWT_SECRET` is set in `.env`
+- Verify token is included in Authorization header
+- Check token expiration
+
+### Logs
+
+Application logs are stored in the `logs/` directory:
+- `application-%DATE%.log`: All logs
+- `error-%DATE%.log`: Error logs only
+
+Review logs for detailed error information:
+```bash
+cat logs/error-*.log
+```
+
+### Getting Help
+
+For additional support:
+1. Check the [NestJS Documentation](https://docs.nestjs.com)
+2. Review API documentation at `/api-docs`
+3. Check application logs in `logs/` directory
+4. Verify all environment variables are correctly set
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+This project is licensed for academic purposes.
