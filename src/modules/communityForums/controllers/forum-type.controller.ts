@@ -1,0 +1,78 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  ParseIntPipe,
+  Query,
+} from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { ApiBearerAuth, ApiOperation, ApiTags, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { RolesGuard } from '@/common/guards/roles.guard';
+import { Roles } from '@/common/decorators/roles.decorator';
+import { UserRole } from '@/core/users/user.entity';
+import { ForumTypeService } from '../services/forum-type.service';
+import { CreateForumTypeDto } from '../dto/create-forum-type.dto';
+import { UpdateForumTypeDto } from '../dto/update-forum-type.dto';
+
+@ApiTags('Forum Types')
+@ApiBearerAuth()
+@UseGuards(AuthGuard('jwt'), RolesGuard)
+@Controller('forum-types')
+export class ForumTypeController {
+  constructor(private readonly forumTypeService: ForumTypeService) {}
+
+  @Post()
+  @ApiOperation({ summary: 'Create a new forum type/category' })
+  @ApiResponse({ status: 201, description: 'Forum type created successfully' })
+  @Roles(UserRole.ADMIN)
+  async create(@Body() createDto: CreateForumTypeDto) {
+    return await this.forumTypeService.create(createDto);
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'Get all forum types' })
+  @ApiQuery({ name: 'page', required: false, description: 'Page number (default: 1)' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Items per page (default: 10)' })
+  @ApiResponse({ status: 200, description: 'List of all forum types' })
+  async findAll(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
+    return await this.forumTypeService.findAll(Number(page) || 1, Number(limit) || 10);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get forum type by ID' })
+  @ApiResponse({ status: 200, description: 'Forum type details' })
+  @ApiResponse({ status: 404, description: 'Forum type not found' })
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    return await this.forumTypeService.findOne(id);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update forum type by ID' })
+  @ApiResponse({ status: 200, description: 'Forum type updated successfully' })
+  @ApiResponse({ status: 404, description: 'Forum type not found' })
+  @Roles(UserRole.ADMIN)
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateDto: UpdateForumTypeDto,
+  ) {
+    return await this.forumTypeService.update(id, updateDto);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete forum type by ID' })
+  @ApiResponse({ status: 200, description: 'Forum type deleted successfully' })
+  @ApiResponse({ status: 404, description: 'Forum type not found' })
+  @Roles(UserRole.ADMIN)
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    await this.forumTypeService.remove(id);
+    return { message: 'Forum type deleted successfully' };
+  }
+}
