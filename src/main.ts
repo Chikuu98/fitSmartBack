@@ -46,14 +46,15 @@ async function bootstrap() {
 
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
-  const frontendOrigins = configService
+  // Reads the environment variable populated dynamically by the GitHub Actions run
+  const configuredOrigins = configService
     .get<string>('FRONTEND_URL')
     ?.split(',')
     .map((origin) => origin.trim())
     .filter(Boolean);
 
   app.enableCors({
-    origin: frontendOrigins && frontendOrigins.length > 0 ? frontendOrigins : '*',
+    origin: configuredOrigins && configuredOrigins.length > 0 ? configuredOrigins : false,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
