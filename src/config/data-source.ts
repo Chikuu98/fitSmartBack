@@ -70,7 +70,7 @@ export const AppDataSource = new DataSource({
     Notification,
     Rating
   ],
-  migrations: ['src/database/migrations/*.ts'],
+  migrations: [`${__dirname.replace(/\\/g, '/')}/../database/migrations/*{.ts,.js}`],
   synchronize: false,
 });
 
