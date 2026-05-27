@@ -79,15 +79,15 @@ jobs:
             echo "📦 Installing production dependencies via NPM..."
             npm install --omit=dev --no-audit --no-fund
 
-            # 4. Expose variables and execute production compiled migrations/seeds cleanly
+            # 4. Expose variables and execute compiled migrations/seeds cleanly
             echo "🚀 Running Database Migrations..."
             export $(sudo cat /etc/fitsmart-backend.env | xargs)
-            
-            # Execute migration directly using the compiled JS distribution setup
-            node node_modules/typeorm/cli.js migration:run -d dist/config/typeorm.config.js || npm run migration:run || true
+
+            # Run migrations from the compiled DataSource
+            node node_modules/typeorm/cli.js migration:run -d dist/config/data-source.js
 
             echo "🌱 Seeding Admin User..."
-            node dist/db/seeds/admin-seeder.js || npm run seed:admin || true
+            node dist/database/seeds/create-admin.seed.js
 
             # 5. Kick off fresh app daemon process
             echo "🔄 Restarting NestJS Engine..."
