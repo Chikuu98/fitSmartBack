@@ -43,13 +43,15 @@ jobs:
 
       - name: Provision DB, Install Dependencies, and Run Migrations
         run: |
-          ssh ${{ secrets.DO_SSH_USER }}@${{ secrets.DO_SSH_HOST }} \
-            DB_USERNAME="${{ secrets.DB_USERNAME }}" \
-            DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
-            DB_NAME="${{ secrets.DB_NAME }}" \
-            CORS_ORIGINS="${{ secrets.CORS_ORIGINS }}" \
-          << 'EOF'
-            # 1. Automate Database and User Creation via MySQL root bypass
+          ssh ${{ secrets.DO_SSH_USER }}@${{ secrets.DO_SSH_HOST }} << 'EOF'
+            # 1. Safely pull secrets inside the literal remote shell block
+            DB_NAME="${{ secrets.DB_NAME }}"
+            DB_USERNAME="${{ secrets.DB_USERNAME }}"
+            DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
+            CORS_ORIGINS="${{ secrets.CORS_ORIGINS }}"
+            JWT_SECRET="${{ secrets.JWT_SECRET }}"
+            GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}"
+
             echo "⚙️ Provisioning MySQL Database and User if they don't exist..."
             sudo mysql -u root <<SQL
               CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -58,35 +60,40 @@ jobs:
               FLUSH PRIVILEGES;
             SQL
 
-            # 2. Update or generate the permanent environment file for Systemd
-            # This populates the exact variables that main.ts reads via ConfigService
+            # 2. Write the complete, multi-variable environment profile
             echo "📝 Syncing environment properties to system configuration..."
             sudo mkdir -p /etc
             sudo tee /etc/fitsmart-backend.env > /dev/null <<ENV
-            PORT=3000
-            DB_HOST=127.0.0.1
-            DB_PORT=3306
-            DB_USERNAME=${DB_USERNAME}
-            DB_PASSWORD=${DB_PASSWORD}
-            DB_NAME=${DB_NAME}
-            FRONTEND_URL=${CORS_ORIGINS}
+              PORT=3000
+              DB_HOST=127.0.0.1
+              DB_PORT=3306
+              DB_USERNAME=${DB_USERNAME}
+              DB_PASSWORD=${DB_PASSWORD}
+              DB_NAME=${DB_NAME}
+              FRONTEND_URL=${CORS_ORIGINS}
+              JWT_SECRET=${JWT_SECRET}
+              GEMINI_API_KEY=${GEMINI_API_KEY}
+              GEMINI_PRIMARY_MODEL=gemini-2.5-flash
+              GEMINI_SECONDARY_MODEL=gemini-2.0-flash
+              GEMINI_TERTIARY_MODEL=gemini-2.0-flash-exp
+              GEMINI_FALLBACK_MODEL=gemini-2.5-pro
             ENV
             sudo chmod 600 /etc/fitsmart-backend.env
 
-            # 3. Navigate to directory and install production modules
+            # 3. Navigate and run production bundle installation
             cd /var/www/fitsmart-back
             echo "📦 Installing production dependencies..."
             yarn install --frozen-lockfile --production
 
-            # 4. Inject system environment temporarily to execute migrations and seeding
+            # 4. Expose variables and run data schema syncs
             echo "🚀 Running Database Migrations..."
             export $(sudo cat /etc/fitsmart-backend.env | xargs)
             yarn migration:run
-            
+
             echo "🌱 Seeding Admin User..."
             yarn seed:admin
 
-            # 5. Restart background NestJS engine daemon
+            # 5. Kick off fresh app daemon process
             echo "🔄 Restarting NestJS Engine..."
             sudo systemctl restart fitsmart-backend
-            EOF
+          EOF
