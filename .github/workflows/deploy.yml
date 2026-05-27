@@ -37,14 +37,59 @@ jobs:
 
       - name: Sync build artifacts to droplet
         run: |
-          ssh ${{ secrets.DO_SSH_USER }}@${{ secrets.DO_SSH_HOST }} "mkdir -p /var/www/fitsmart-back/dist"
+          ssh ${{ secrets.DO_SSH_USER }}@${{ secrets.DO_SSH_HOST }} "sudo mkdir -p /var/www/fitsmart-back && sudo chown -R ${{ secrets.DO_SSH_USER }}:${{ secrets.DO_SSH_USER }} /var/www/fitsmart-back"
           rsync -az --delete dist/ ${{ secrets.DO_SSH_USER }}@${{ secrets.DO_SSH_HOST }}:/var/www/fitsmart-back/dist/
           rsync -az package.json yarn.lock ${{ secrets.DO_SSH_USER }}@${{ secrets.DO_SSH_HOST }}:/var/www/fitsmart-back/
 
-      - name: Install production dependencies and restart service
+      - name: Provision DB, Install Dependencies, and Run Migrations
         run: |
           ssh ${{ secrets.DO_SSH_USER }}@${{ secrets.DO_SSH_HOST }} << 'EOF'
-          cd /var/www/fitsmart-back
-          yarn install --frozen-lockfile --production
-          sudo systemctl restart fitsmart-backend
+            # 1. Safely pull secrets inside the literal remote shell block
+            DB_NAME="${{ secrets.DB_NAME }}"
+            DB_USERNAME="${{ secrets.DB_USERNAME }}"
+            DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
+            CORS_ORIGINS="${{ secrets.CORS_ORIGINS }}"
+            JWT_SECRET="${{ secrets.JWT_SECRET }}"
+            GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}"
+
+            echo "⚙️ Provisioning MySQL Database and User if they don't exist..."
+            sudo mysql -u root -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE USER IF NOT EXISTS '${DB_USERNAME}'@'localhost' IDENTIFIED BY '${DB_PASSWORD}'; GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USERNAME}'@'localhost'; FLUSH PRIVILEGES;"
+
+            # 2. Write the complete, multi-variable environment profile
+            echo "📝 Syncing environment properties to system configuration..."
+            sudo mkdir -p /etc
+            printf '%s\n' \
+              "PORT=3000" \
+              "DB_HOST=127.0.0.1" \
+              "DB_PORT=3306" \
+              "DB_USERNAME=${DB_USERNAME}" \
+              "DB_PASSWORD=${DB_PASSWORD}" \
+              "DB_NAME=${DB_NAME}" \
+              "FRONTEND_URL=${CORS_ORIGINS}" \
+              "JWT_SECRET=${JWT_SECRET}" \
+              "GEMINI_API_KEY=${GEMINI_API_KEY}" \
+              "GEMINI_PRIMARY_MODEL=gemini-2.5-flash" \
+              "GEMINI_SECONDARY_MODEL=gemini-2.0-flash" \
+              "GEMINI_TERTIARY_MODEL=gemini-2.0-flash-exp" \
+              "GEMINI_FALLBACK_MODEL=gemini-2.5-pro" | sudo tee /etc/fitsmart-backend.env > /dev/null
+            sudo chmod 600 /etc/fitsmart-backend.env
+
+            # 3. Navigate and run production bundle installation with write access verified
+            cd /var/www/fitsmart-back
+            echo "📦 Installing production dependencies via NPM..."
+            npm install --omit=dev --no-audit --no-fund
+
+            # 4. Expose variables and execute compiled migrations/seeds cleanly
+            echo "🚀 Running Database Migrations..."
+            export $(sudo cat /etc/fitsmart-backend.env | xargs)
+
+            # Run migrations from the compiled DataSource
+            node node_modules/typeorm/cli.js migration:run -d dist/config/data-source.js
+
+            echo "🌱 Seeding Admin User..."
+            node dist/database/seeds/create-admin.seed.js
+
+            # 5. Kick off fresh app daemon process
+            echo "🔄 Restarting NestJS Engine..."
+            sudo systemctl restart fitsmart-backend
           EOF

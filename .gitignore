@@ -3,6 +3,8 @@
 /node_modules
 /build
 
+*.env
+upload_env.sh
 # Logs
 logs
 *.log
