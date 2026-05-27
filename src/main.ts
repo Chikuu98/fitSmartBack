@@ -46,8 +46,14 @@ async function bootstrap() {
 
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
+  const frontendOrigins = configService
+    .get<string>('FRONTEND_URL')
+    ?.split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
   app.enableCors({
-    origin: configService.get<string>('FRONTEND_URL') ?? '*',
+    origin: frontendOrigins && frontendOrigins.length > 0 ? frontendOrigins : '*',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
